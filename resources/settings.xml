@@ -2,7 +2,7 @@
 <settings>
     <category label="30000">
         <setting label="30001" type="folder" id="recdir" default="/home/kodi/Aufnahmen" />
-        <setting label="30002" type="folder" id="scandir" default="home/kodi/.convert" />
+        <setting label="30002" type="folder" id="scandir" default="home/kodi/tmp" />
         <setting label="30003" type="folder" id="destdir" default="/home/kodi/Videos" />
         <setting label="30004" type="bool" id="delsource" default="false" />
         <setting label="30005" type="bool" id="addnew" default="false" />
