@@ -13,7 +13,7 @@ import pyxbmct.addonwindow as pyxbmct
 import time
 from datetime import datetime, tzinfo, timedelta
 
-from service import json_request, get_vdr_recinfo, get_vdr_reclist, get_vdr_channel, get_vdr_timerlist, is_active_recording
+from service import get_vdr_reclist, get_vdr_timerlist, is_active_recording
 
 import sys
 import subprocess
