@@ -141,45 +141,6 @@ def get_vdr_recinfo(recdir):
     return rec
 
 
-def get_pvr_margins():
-    GET_PVRSTARTMARGIN = {
-        'jsonrpc': '2.0',
-        'method': 'Settings.GetSettingValue',
-        'params': {
-            'setting': 'pvrrecord.marginstart'
-            },
-        'id': 1
-    }
-
-    GET_PVRENDMARGIN = {
-        'jsonrpc': '2.0',
-        'method': 'Settings.GetSettingValue',
-        'params': {
-            'setting': 'pvrrecord.marginend'
-            },
-        'id': 1
-    }
-
-    GET_IDLETIME = {
-        'jsonrpc': '2.0',
-        'method': 'Settings.GetSettingValue',
-        'params': {
-            'setting': 'pvrpowermanagement.backendidletime'
-            },
-        'id': 1
-    }
-
-    data = json_request(GET_PVRSTARTMARGIN, 'localhost')
-    if data['result']:
-        pvr_margins = {'start':int(data['result']['value']) * 60}
-
-    data = json_request(GET_PVRENDMARGIN, 'localhost')
-    if data['result']:
-        pvr_margins = {'end':int(data['result']['value']) * 60}
-
-    return pvr_margins
-
-
 def get_vdr_channel(channelid):
     GET_CHANNELDETAILS = {
         'jsonrpc': '2.0',
