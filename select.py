@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-# Licence: GPL v.3 http://www.gnu.org/licenses/gpl.html
-# This is an XBMC addon for demonstrating the capabilities
-# and usage of PyXBMCt framework.
 
 import os
 import xbmc
@@ -112,9 +109,12 @@ if __name__ == '__main__':
     # Settings:
     try:
         vdr_rec_dir = __setting__('recdir')
-        scan_dir = __setting__('scandir')
     except:
         vdr_rec_dir = '/home/kodi/Aufnahmen/'
+
+    try:
+        scan_dir = __setting__('scandir')
+    except:
         scan_dir = '/home/kodi/tmp'
 
 
