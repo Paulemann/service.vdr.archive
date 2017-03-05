@@ -1,0 +1,74 @@
+# XBMC Media Center language file
+# Addon Name: VDR Recordings Archiver Service
+# Addon id: service.recordings.archiver
+# Addon version: 0.2
+# Addon Provider: Paulemann
+msgid ""
+msgstr ""
+"Project-Id-Version: XBMC-Addons\n"
+"Report-Msgid-Bugs-To: alanwww1@xbmc.org\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+
+msgctxt "Addon Summary"
+msgid "Convert VDR Recordings into mp4 video files."
+msgstr ""
+
+msgctxt "Addon Description"
+msgid "This addon lets you select locally stored VDR recordings for conversion to mp4 video files and archiving at the configured destination. The conversion is handled by a service which runs in the background."
+msgstr ""
+
+msgctxt "Addon Disclaimer"
+msgid "Use at your own risk"
+msgstr ""
+
+msgctxt "#30000"
+msgid "General"
+msgstr ""
+
+msgctxt "#30001"
+msgid "Path to VDR recordings"
+msgstr ""
+
+msgctxt "#30002"
+msgid "Path to temporary folder"
+msgstr ""
+
+msgctxt "#30003"
+msgid "Path to destination folder"
+msgstr ""
+
+msgctxt "#30004"
+msgid "Delete source after successful archiving"
+msgstr ""
+
+msgctxt "#30005"
+msgid "Convert and archive all new recordings automatically"
+msgstr ""
+
+msgctxt "#30006"
+msgid "PVR client port (see config of PVR backend)"
+msgstr ""
+
+msgctxt "#30007"
+msgid "Time between checks (seconds)"
+msgstr ""
+
+msgctxt "#30010"
+msgid "Select recordings to archive"
+msgstr ""
+
+msgctxt "#30011"
+msgid "OK"
+msgstr ""
+
+msgctxt "#30012"
+msgid "Cancel"
+msgstr ""
