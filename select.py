@@ -55,7 +55,6 @@ def log(msg):
 
 
 def basename(path):
-    #return path.strip('/').split('/')[-1]
     return os.path.basename(path)
 
 
@@ -67,12 +66,11 @@ def json_request(kodi_request, host):
     if host == 'localhost':
         response = xbmc.executeJSONRPC(json.dumps(kodi_request))
         if response:
-            return json.loads(response.decode('utf8','mixed'))
+            return json.loads(response.decode('utf-8','mixed'))
 
     request = urllib2.Request(URL, json.dumps(kodi_request), HEADER)
     with closing(urllib2.urlopen(request)) as response:
-        #return json.loads(response.read())
-        return json.loads(response.read().decode('utf8', 'mixed'))
+        return json.loads(response.read().decode('utf-8', 'mixed'))
 
 
 def utc_to_local(t_str, t_fmt):
@@ -110,7 +108,6 @@ def get_vdr_recinfo(recdir):
     estart = length = 0
     rec = {}
 
-    #infofile = recdir + '/info'
     infofile = os.path.join(recdir, 'info')
     if not os.path.isfile(infofile):
         return rec
@@ -289,7 +286,6 @@ def is_active_recording(rec, timerlist):
     if not os.path.isdir(rec_dir):
         return False
 
-    #now = int(time.mktime(time.gmtime()))
     now = int(time.mktime(time.localtime()))
 
     for timer in timerlist:
@@ -316,11 +312,6 @@ class MultiChoiceDialog(pyxbmct.AddonDialogWindow):
         self.set_controls()
         self.connect_controls()
         self.listing.addItems(items or [])
-        #if (self.listing.size() > 0) and self.selected:
-        #    #for index in self.selected:
-        #        if index < self.listing.size():
-        #            self.listing.getListItem(index).setIconImage(__check_icon__)
-        #            self.listing.getListItem(index).setLabel2("checked")
         if (self.listing.size() > 0):
             for index in xrange(self.listing.size()):
                 if index in self.selected:
@@ -334,10 +325,8 @@ class MultiChoiceDialog(pyxbmct.AddonDialogWindow):
     def set_controls(self):
         self.listing = pyxbmct.List(_imageWidth=15)
         self.placeControl(self.listing, 0, 0, rowspan=9, columnspan=10)
-        #self.ok_button = pyxbmct.Button("OK")
         self.ok_button = pyxbmct.Button(__localize__(30011))
         self.placeControl(self.ok_button, 9, 3, columnspan=2)
-        #self.cancel_button = pyxbmct.Button("Cancel")
         self.cancel_button = pyxbmct.Button(__localize__(30012))
         self.placeControl(self.cancel_button, 9, 5, columnspan=2)
 
@@ -372,7 +361,6 @@ class MultiChoiceDialog(pyxbmct.AddonDialogWindow):
         super(MultiChoiceDialog, self).close()
 
     def close(self):
-        #self.selected = []
         self.selected = None
         super(MultiChoiceDialog, self).close()
 
@@ -381,8 +369,6 @@ if __name__ == '__main__':
 
     # Settings:
     try:
-        #__service_addon__ = xbmcaddon.Addon(id='service.recordings.archiver')
-        #__setting__ = __service_addon__.getSetting
         vdr_rec_dir = __setting__('recdir')
         scan_dir = __setting__('scandir')
     except:
@@ -409,7 +395,6 @@ if __name__ == '__main__':
 
     dialog = MultiChoiceDialog(__localize__(30010), items, pre_select)
     dialog.doModal()
-    #xbmcgui.Dialog().notification("Finished", "Selected: {0}".format(str(dialog.selected)))
 
     if dialog.selected is not None:
         unselect = [index  for index in pre_select if index not in dialog.selected]
