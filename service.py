@@ -457,7 +457,7 @@ def convert(rec, dest, delsource='False'):
         return
 
     try:
-        xbmc.log(msg='[{}] Thread started. Archiving {} in {}...'.format(__addon_id__, recdir, dest), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Archiving thread started. Archiving {} in {}...'.format(__addon_id__, recdir, dest), level=xbmc.LOGNOTICE)
 
         if os.path.exists(vdrfilename):
             os.remove(vdrfilename)
@@ -507,22 +507,19 @@ def convert(rec, dest, delsource='False'):
 if __name__ == '__main__':
     #threads = []
     lock = threading.Lock()
-
     monitor = MyMonitor()
-
     xbmc.log(msg='[{}] Addon started.'.format(__addon_id__), level=xbmc.LOGNOTICE)
-
     load_addon_settings()
 
     vdr_reclist = set()
 
     while not monitor.abortRequested():
         vdr_reclist = monitor_source(vdr_rec_dir, addnew=add_new)
-        archive_list = get_vdr_reclist(scan_dir, expand=True, sort=False)
-        timerlist = get_vdr_timerlist()
+        archive_reclist = get_vdr_reclist(scan_dir, expand=True, sort=False)
+        vdr_timerlist = get_vdr_timerlist()
 
-        for rec in archive_list:
-            if is_now_playing(rec) or is_active_recording(rec, timerlist):
+        for rec in archive_reclist:
+            if is_now_playing(rec) or is_active_recording(rec, vdr_timerlist):
                 continue
             else:
                 t = threading.Thread(target=convert, args=(rec, dest_dir, del_source))
