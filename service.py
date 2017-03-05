@@ -20,6 +20,9 @@ import threading
 
 time_fmt = '%Y-%m-%d %H:%M:%S'
 
+__addon__ = xbmcaddon.Addon()
+__setting__ = __addon__.getSetting
+__addon_id__ = __addon__.getAddonInfo('id')
 
 class MyMonitor( xbmc.Monitor ):
     def __init__( self, *args, **kwargs ):
