@@ -49,11 +49,6 @@ def mixed_decoder(unicode_error):
 codecs.register_error('mixed', mixed_decoder)
 
 
-def log(msg):
-    if len(sys.argv) == 1:
-        print msg
-
-
 def json_request(kodi_request, host):
     PORT   =    8080
     URL    =    'http://' + host + ':' + str(PORT) + '/jsonrpc'
