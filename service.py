@@ -35,17 +35,6 @@ class MyMonitor( xbmc.Monitor ):
         load_addon_settings()
 
 
-def read_set(string):
-    ret = set()
-    for element in string.split(','):
-        try:
-            item = int(element)
-        except ValueError:
-            item = element.strip()
-        ret.add(item)
-    return ret
-
-
 def load_addon_settings():
     global sleep_time, add_new, del_source, vdr_rec_dir, vdr_port, scan_dir, dest_dir
 
