@@ -497,11 +497,7 @@ def convert(rec, dest, delsource='False'):
 
     finally:
         lock.release()
-        xbmc.log(msg='[{}] Archiving thread completed with error {}'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
-        #if sys.exc_info()[1] is not None
-        #    xbmc.log(msg='[{}] Archiving thread completed with error {}'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
-        #else
-        #    xbmc.log(msg='[{}] Archiving thread completed successfully.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Archiving thread completed with error: {}.'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
         return
 
 
