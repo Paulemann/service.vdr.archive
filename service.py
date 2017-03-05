@@ -457,7 +457,7 @@ def convert(rec, dest, delsource='False'):
         return
 
     try:
-        xbmc.log(msg='[{}] Archiving thread started.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Thread started. Archiving {} in {}...'.format(__addon_id__, recdir, dest), level=xbmc.LOGNOTICE)
 
         if os.path.exists(vdrfilename):
             os.remove(vdrfilename)
@@ -518,14 +518,13 @@ if __name__ == '__main__':
 
     while not monitor.abortRequested():
         vdr_reclist = monitor_source(vdr_rec_dir, addnew=add_new)
-        reclist = get_vdr_reclist(scan_dir, expand=True, sort=False)
+        archive_list = get_vdr_reclist(scan_dir, expand=True, sort=False)
         timerlist = get_vdr_timerlist()
 
-        for rec in reclist:
+        for rec in archive_list:
             if is_now_playing(rec) or is_active_recording(rec, timerlist):
                 continue
             else:
-                xbmc.log(msg='[{}] Found link to {} in {}. Archiving in {}...'.format(__addon_id__, rec['path'], scan_dir, dest_dir), level=xbmc.LOGNOTICE)
                 t = threading.Thread(target=convert, args=(rec, dest_dir, del_source))
                 #threads.append(t)
                 #t.setDaemon(True)
