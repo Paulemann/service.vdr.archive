@@ -454,7 +454,6 @@ def convert(rec, dest, delsource='False'):
         return
 
     if not lock.acquire(False):
-        xbmc.log(msg='[{}] Cannot lock thread until previous thread has finished. Abort.'.format(__addon_id__), level=xbmc.LOGNOTICE)
         return
 
     try:
@@ -496,11 +495,12 @@ def convert(rec, dest, delsource='False'):
         if delsource:
             os.remove(recdir)
 
-        xbmc.log(msg='[{}] Archiving thread completed successfully.'.format(__addon_id__), level=xbmc.LOGNOTICE)
-
     finally:
         lock.release()
-        xbmc.log(msg='[{}] Archiving thread completed with error {}'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+        if sys.exc_info()[1] != 'None'
+            xbmc.log(msg='[{}] Archiving thread completed with error {}'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+        else
+            xbmc.log(msg='[{}] Archiving thread completed successfully.'.format(__addon_id__), level=xbmc.LOGNOTICE)
         return
 
 
