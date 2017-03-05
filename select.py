@@ -54,10 +54,6 @@ def log(msg):
         print msg
 
 
-def basename(path):
-    return os.path.basename(path)
-
-
 def json_request(kodi_request, host):
     PORT   =    8080
     URL    =    'http://' + host + ':' + str(PORT) + '/jsonrpc'
@@ -351,7 +347,7 @@ if __name__ == '__main__':
         item = '{}{} {}: {} ({})'.format(prefix, convert_date(rec['recording']['start'], time_fmt, '%d.%m.%Y %H:%M'), rec['recording']['channel'], rec['recording']['title'], rec['recording']['subtitle'])
         items.append(item)
 
-        if os.path.islink(os.path.join(scan_dir, basename(rec['path']))):
+        if os.path.islink(os.path.join(scan_dir, os.path.basename(rec['path']))):
             pre_select.append(index)
 
     dialog = MultiChoiceDialog(__localize__(30010), items, pre_select)
@@ -361,13 +357,13 @@ if __name__ == '__main__':
         unselect = [index  for index in pre_select if index not in dialog.selected]
         for index in unselect:
             try:
-                os.unlink(os.path.join(scan_dir, basename(reclist[index]['path'])))
+                os.unlink(os.path.join(scan_dir, os.path.basename(reclist[index]['path'])))
             except:
                 continue
 
         for index in dialog.selected:
             try:
-                os.symlink(reclist[index]['path'], os.path.join(scan_dir, basename(reclist[index]['path'])))
+                os.symlink(reclist[index]['path'], os.path.join(scan_dir, os.path.basename(reclist[index]['path'])))
             except:
                 continue
 
