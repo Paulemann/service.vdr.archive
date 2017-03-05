@@ -457,7 +457,7 @@ def convert(rec, dest, delsource='False'):
         return
 
     try:
-        xbmc.log(msg='[{}] Archiving thread started. Archiving {} in {}...'.format(__addon_id__, recdir, dest), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Archiving thread started. Archiving {} as {}...'.format(__addon_id__, recdir, outfilename), level=xbmc.LOGNOTICE)
 
         if os.path.exists(vdrfilename):
             os.remove(vdrfilename)
