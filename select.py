@@ -11,12 +11,9 @@ import xbmcaddon
 import pyxbmct.addonwindow as pyxbmct
 
 import time
-from datetime import datetime, tzinfo, timedelta
+from datetime import datetime
 
 from service import get_vdr_reclist, get_vdr_timerlist, is_active_recording
-
-import sys
-import subprocess
 
 
 __addon__ = xbmcaddon.Addon()
