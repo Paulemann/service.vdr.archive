@@ -46,9 +46,9 @@ def load_addon_settings():
     s = addon.getSetting
 
     try:
-        sleep_time = int(float(s('sleep')) * 1000)
+        sleep_time = int(s('sleep'))
     except ValueError:
-        sleep_time = 300 * 1000
+        sleep_time = 300
 
     try:
         vdr_port = int(s('pvrport'))
@@ -106,7 +106,6 @@ codecs.register_error('mixed', mixed_decoder)
 
 
 def json_request(kodi_request, host):
-
     PORT   =    8080
     URL    =    'http://' + host + ':' + str(PORT) + '/jsonrpc'
     HEADER =    {'Content-Type': 'application/json'}
@@ -114,13 +113,11 @@ def json_request(kodi_request, host):
     if host == 'localhost':
         response = xbmc.executeJSONRPC(json.dumps(kodi_request))
         if response:
-            return json.loads(response.decode('utf8','mixed'))
+            return json.loads(response.decode('utf-8','mixed'))
 
     request = urllib2.Request(URL, json.dumps(kodi_request), HEADER)
     with closing(urllib2.urlopen(request)) as response:
-        #return json.loads(response.read())
-        #return json.loads(response.read().decode('utf8', errors='replace').replace(u'\ufffd','?'))
-        return json.loads(response.read().decode('utf8', 'mixed'))
+        return json.loads(response.read().decode('utf-8', 'mixed'))
 
 
 def utc_to_local(t_str, t_fmt):
@@ -147,7 +144,6 @@ def get_vdr_recinfo(recdir):
     #if os.path.islink(recdir):
     #    recdir = os.path.realdir(recdir)
 
-    # infofile = recdir + '/info'
     infofile = os.path.join(recdir, 'info')
     if not os.path.isfile(infofile):
         return rec
@@ -419,7 +415,6 @@ def is_active_recording(rec, timerlist):
     if not os.path.isdir(rec_dir):
         return False
 
-    #now = int(time.mktime(time.gmtime()))
     now = int(time.mktime(time.localtime()))
 
     for timer in timerlist:
@@ -467,10 +462,8 @@ def convert(rec, dest, delsource='False'):
 
     if not lock.acquire(False):
         xbmc.log(msg='[{}] Cannot lock thread until previous thread has finished. Abort.'.format(addon.getAddonInfo('id')), level=xbmc.LOGNOTICE)
-        #event.wait()
         return
 
-    #event.clear()
     try:
         xbmc.log(msg='[{}] Archiving thread started.'.format(addon.getAddonInfo('id')), level=xbmc.LOGNOTICE)
 
@@ -513,7 +506,6 @@ def convert(rec, dest, delsource='False'):
         xbmc.log(msg='[{}] Archiving thread completed successfully.'.format(addon.getAddonInfo('id')), level=xbmc.LOGNOTICE)
 
     finally:
-        #event.set()
         lock.release()
         xbmc.log(msg='[{}] Archiving thread completed with error {}'.format(addon.getAddonInfo('id'), sys.exc_info()[1]), level=xbmc.LOGNOTICE)
         return
@@ -548,5 +540,5 @@ if __name__ == '__main__':
                 t.start()
                 break
 
-        if monitor.waitForAbort(float(sleep_time) / 1000.0):
+        if monitor.waitForAbort(float(sleep_time)):
             break
