@@ -46,22 +46,20 @@ def read_set(string):
 def load_addon_settings():
     global sleep_time, add_new, del_source, vdr_rec_dir, vdr_port, scan_dir, dest_dir
 
-    s = addon.getSetting
-
     try:
-        sleep_time = int(s('sleep'))
+        sleep_time = int(__setting__('sleep'))
     except ValueError:
         sleep_time = 300
 
     try:
-        vdr_port = int(s('pvrport'))
+        vdr_port = int(__setting__('pvrport'))
     except ValueError:
         vdr_port = 34890
 
     try:
         # Perhaps this will work, too:
-        #del_source = bool(s('delsource') != 'false')
-        if s('delsource') == 'false':
+        #del_source = bool(__setting__('delsource') != 'false')
+        if __setting__('delsource') == 'false':
             del_source = False
         else:
             del_source = True
@@ -69,7 +67,7 @@ def load_addon_settings():
         del_source = False
 
     try:
-        if s('addnew') == 'false':
+        if __setting__('addnew') == 'false':
            add_new = False
         else:
            add_new = True
@@ -77,21 +75,21 @@ def load_addon_settings():
         add_new = False
 
     try:
-        vdr_rec_dir = s('recdir')
+        vdr_rec_dir = __setting__('recdir')
     except ValueError:
         vdr_rec_dir = '/home/kodi/Aufnahmen'
 
     try:
-        scan_dir = s('scandir')
+        scan_dir = __setting__('scandir')
     except ValueError:
         scan_dir = '/home/kodi/tmp'
 
     try:
-        dest_dir = s('destdir')
+        dest_dir = __setting__('destdir')
     except ValueError:
         dest_dir = '/home/kodi/Videos'
 
-    xbmc.log(msg='[{}] Settings loaded.'.format(addon.getAddonInfo('id')), level=xbmc.LOGNOTICE)
+    xbmc.log(msg='[{}] Settings loaded.'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
     return
 
@@ -464,11 +462,11 @@ def convert(rec, dest, delsource='False'):
         return
 
     if not lock.acquire(False):
-        xbmc.log(msg='[{}] Cannot lock thread until previous thread has finished. Abort.'.format(addon.getAddonInfo('id')), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Cannot lock thread until previous thread has finished. Abort.'.format(__addon_id__), level=xbmc.LOGNOTICE)
         return
 
     try:
-        xbmc.log(msg='[{}] Archiving thread started.'.format(addon.getAddonInfo('id')), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Archiving thread started.'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
         if os.path.exists(vdrfilename):
             os.remove(vdrfilename)
@@ -481,9 +479,9 @@ def convert(rec, dest, delsource='False'):
         try:
             outfile = open(vdrfilename, 'wb')
         except:
-            xbmc.log(msg='[{}] Error {}'.format(addon.getAddonInfo('id'), sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Error {}'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
         for file in tsfiles:
-            xbmc.log(msg='[{}] Merging file {}'.format(addon.getAddonInfo('id'), file), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Merging file {}'.format(__addon_id__, file), level=xbmc.LOGNOTICE)
 
             fpath = os.path.join(recdir, file)
             infile = open(fpath, 'rb')
@@ -495,7 +493,7 @@ def convert(rec, dest, delsource='False'):
             infile.close()
         outfile.close()
 
-        xbmc.log(msg='[{}] Starting conversion with ffmpeg ...'.format(addon.getAddonInfo('id')), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Starting conversion with ffmpeg ...'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
         subprocess.check_call(['ffmpeg', '-v', '10', '-i', vdrfilename, '-vcodec', 'libx264', '-acodec', 'copy', outfilename], preexec_fn=lambda: os.nice(19))
 
@@ -506,11 +504,11 @@ def convert(rec, dest, delsource='False'):
         if delsource:
             os.remove(recdir)
 
-        xbmc.log(msg='[{}] Archiving thread completed successfully.'.format(addon.getAddonInfo('id')), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Archiving thread completed successfully.'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
     finally:
         lock.release()
-        xbmc.log(msg='[{}] Archiving thread completed with error {}'.format(addon.getAddonInfo('id'), sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Archiving thread completed with error {}'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
         return
 
 
@@ -518,10 +516,9 @@ if __name__ == '__main__':
     #threads = []
     lock = threading.Lock()
 
-    addon = xbmcaddon.Addon()
     monitor = MyMonitor()
 
-    xbmc.log(msg='[{}] Addon started.'.format(addon.getAddonInfo('id')), level=xbmc.LOGNOTICE)
+    xbmc.log(msg='[{}] Addon started.'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
     load_addon_settings()
 
@@ -536,7 +533,7 @@ if __name__ == '__main__':
             if is_now_playing(rec) or is_active_recording(rec, timerlist):
                 continue
             else:
-                xbmc.log(msg='[{}] Found link to {} in {}. Archiving in {}...'.format(addon.getAddonInfo('id'), rec['path'], scan_dir, dest_dir), level=xbmc.LOGNOTICE)
+                xbmc.log(msg='[{}] Found link to {} in {}. Archiving in {}...'.format(__addon_id__, rec['path'], scan_dir, dest_dir), level=xbmc.LOGNOTICE)
                 t = threading.Thread(target=convert, args=(rec, dest_dir, del_source))
                 #threads.append(t)
                 #t.setDaemon(True)
