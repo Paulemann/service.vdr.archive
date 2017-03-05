@@ -95,7 +95,7 @@ def convert_date(t_str, t_fmt_in, t_fmt_out):
 
 
 def get_vdr_recinfo(recdir):
-    recdate = title = subtitle = channel = ''
+    title = subtitle = channel = start = end = ''
     estart = length = 0
     rec = {}
 
