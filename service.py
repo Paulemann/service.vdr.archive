@@ -49,7 +49,7 @@ def load_addon_settings():
         vdr_port = 34890
 
     try:
-        # Perhaps this will work, too:
+        # This should work as well:
         #del_source = bool(__setting__('delsource') != 'false')
         if __setting__('delsource') == 'false':
             del_source = False
@@ -59,10 +59,11 @@ def load_addon_settings():
         del_source = False
 
     try:
+        #add_new = bool(__setting__('addnew') != 'false')
         if __setting__('addnew') == 'false':
-           add_new = False
+            add_new = False
         else:
-           add_new = True
+            add_new = True
     except ValueError:
         add_new = False
 
@@ -216,11 +217,10 @@ def monitor_source(topdir, addnew=False):
             if 'info' in files and '00001.ts' in files:
                 curr_vdr_reclist.add(path)
 
+    #removed_list = [f for f in prev_vdr_reclist if not f in curr_vdr_reclist]
+    #added_list = [f for f in curr_vdr_reclist if not f in prev_vdr_reclist]
     removed_list = prev_vdr_reclist - curr_vdr_reclist
     added_list = curr_vdr_reclist - prev_vdr_reclist
-
-    #added = [f for f in curr_vdr_reclist if not f in prev_vdr_reclist]
-    #removed = [f for f in prev_vdr_reclist if not f in curr_vdr_reclist]
 
     for path in removed_list:
         try:
@@ -273,9 +273,6 @@ def is_now_playing(rec):
     try:
         rec_file = rec['recording']['file']
     except:
-        #if os.path.isdir(rec):
-        #    recording = get_vdr_recinfo(rec)
-        #    rec_file = reccording['recording']['file']
         return False
 
     for host in find_clients(vdr_port, True):
@@ -288,7 +285,6 @@ def is_now_playing(rec):
                     file = urllib2.unquote(idata['result']['item']['file'].encode('utf-8'))
                     if rec_file in file:
                         return True
-
             except KeyError:
                 continue
 
@@ -357,7 +353,6 @@ def get_vdr_reclist(topdir, expand=False, sort=True):
         if path.endswith('.rec'):
             if not files:
                 continue
-            #if 'info' in files and '00001.ts' in files and os.path.getsize(os.path.join(path, '00001.ts')) > 0:
             if 'info' in files and '00001.ts' in files:
                 rec = {'path':path, 'recording':get_vdr_recinfo(path)}
                 reclist.append(rec)
@@ -383,8 +378,7 @@ def get_vdr_reclist(topdir, expand=False, sort=True):
     if sort:
         # first, always sort by date
         newlist = sorted(reclist, key=lambda k: k['recording']['start'])
-
-        # you may then sort by title in a second step
+        # then sort by title
         newlist = sorted(newlist, key=lambda k: k['recording']['title'])
 
         return newlist
@@ -449,9 +443,10 @@ def convert(rec, dest, delsource='False'):
     outfilename = os.path.join(dest, recname + '.mp4')
 
     if os.path.exists(outfilename) and not os.path.exists(vdrfilename):
-        ## always overwrite
-        #os.remove(outfilename)
+        # either skip if file exists:
         return
+        # or always replace:
+        #os.remove(outfilename)
 
     if not lock.acquire(False):
         return
@@ -496,8 +491,8 @@ def convert(rec, dest, delsource='False'):
             os.remove(recdir)
 
     finally:
-        lock.release()
         xbmc.log(msg='[{}] Archiving thread completed with error: {}.'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+        lock.release()
         return
 
 
