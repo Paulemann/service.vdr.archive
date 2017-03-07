@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
+import time
 import xbmc
 import xbmcgui
 import xbmcaddon
 #import pyxbmct
 import pyxbmct.addonwindow as pyxbmct
 
-import time
 from datetime import datetime
-
 from service import get_vdr_reclist, get_vdr_timerlist, is_active_recording
 
 
