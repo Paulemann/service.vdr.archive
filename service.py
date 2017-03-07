@@ -522,3 +522,5 @@ if __name__ == '__main__':
 
         if monitor.waitForAbort(float(sleep_time)):
             break
+
+    sys.exit(0)
