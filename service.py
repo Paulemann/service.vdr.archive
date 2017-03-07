@@ -50,27 +50,27 @@ def load_addon_settings():
 
     try:
         del_source = True if __setting__('delsource').lower() == 'true' else False 
-    except ValueError:
+    except:
         del_source = False
 
     try:
         add_new = True if __setting__('addnew').lower() == 'true' else False
-    except ValueError:
+    except:
         add_new = False
 
     try:
         vdr_rec_dir = __setting__('recdir')
-    except ValueError:
+    except:
         vdr_rec_dir = '/home/kodi/Aufnahmen'
 
     try:
         scan_dir = __setting__('scandir')
-    except ValueError:
+    except:
         scan_dir = '/home/kodi/tmp'
 
     try:
         dest_dir = __setting__('destdir')
-    except ValueError:
+    except:
         dest_dir = '/home/kodi/Videos'
 
     xbmc.log(msg='[{}] Settings loaded.'.format(__addon_id__), level=xbmc.LOGNOTICE)
