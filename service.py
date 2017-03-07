@@ -49,21 +49,12 @@ def load_addon_settings():
         vdr_port = 34890
 
     try:
-        # This should work as well:
-        #del_source = bool(__setting__('delsource') != 'false')
-        if __setting__('delsource') == 'false':
-            del_source = False
-        else:
-            del_source = True
+        del_source = True if __setting__('delsource').lower() == 'true' else False 
     except ValueError:
         del_source = False
 
     try:
-        #add_new = bool(__setting__('addnew') != 'false')
-        if __setting__('addnew') == 'false':
-            add_new = False
-        else:
-            add_new = True
+        add_new = True if __setting__('addnew').lower() == 'true' else False
     except ValueError:
         add_new = False
 
@@ -522,5 +513,3 @@ if __name__ == '__main__':
 
         if monitor.waitForAbort(float(sleep_time)):
             break
-
-    sys.exit(0)
