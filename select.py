@@ -10,7 +10,7 @@ import pyxbmct.addonwindow as pyxbmct
 import time
 from datetime import datetime
 
-from service import get_vdr_reclist, get_vdr_timerlist, is_active_recording, vdr_rec_dir, scan_dir, dest_dir vdr_port
+from service import get_vdr_reclist, get_vdr_timerlist, is_active_recording, vdr_rec_dir, scan_dir
 
 
 __addon__ = xbmcaddon.Addon()
@@ -106,17 +106,16 @@ class MultiChoiceDialog(pyxbmct.AddonDialogWindow):
 
 if __name__ == '__main__':
 
-    # Settings:
-    try:
-        vdr_rec_dir = __setting__('recdir')
-    except:
-        vdr_rec_dir = '/home/kodi/Aufnahmen/'
+    ## Settings:
+    #try:
+    #    vdr_rec_dir = __setting__('recdir')
+    #except:
+    #    vdr_rec_dir = '/home/kodi/Aufnahmen/'
 
-    try:
-        scan_dir = __setting__('scandir')
-    except:
-        scan_dir = '/home/kodi/tmp'
-
+    #try:
+    #    scan_dir = __setting__('scandir')
+    #except:
+    #    scan_dir = '/home/kodi/tmp'
 
     items = []
     pre_select = []
