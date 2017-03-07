@@ -109,7 +109,7 @@ if __name__ == '__main__':
     try:
         vdr_rec_dir = __setting__('recdir')
         scan_dir = __setting__('scandir')
-    except:
+    except ValueError:
         sys.exit(1)
 
     items = []
