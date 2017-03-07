@@ -36,12 +36,12 @@ class MyMonitor( xbmc.Monitor ):
 
 
 def load_addon_settings():
-    global sleep_time, add_new, del_source, vdr_rec_dir, vdr_port, scan_dir, dest_dir
+    global __sleep_time__, add_new, del_source, vdr_rec_dir, vdr_port, scan_dir, dest_dir
 
     try:
-        sleep_time = int(__setting__('sleep'))
+        __sleep_time__ = int(__setting__('sleep'))
     except ValueError:
-        sleep_time = 300
+        __sleep_time__ = 300
 
     try:
         vdr_port = int(__setting__('pvrport'))
@@ -520,5 +520,5 @@ if __name__ == '__main__':
                 t.start()
                 break
 
-        if monitor.waitForAbort(float(sleep_time)):
+        if monitor.waitForAbort(float(__sleep_time__)):
             break
