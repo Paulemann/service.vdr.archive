@@ -10,7 +10,7 @@ import pyxbmct.addonwindow as pyxbmct
 import time
 from datetime import datetime
 
-from service import get_vdr_reclist, get_vdr_timerlist, is_active_recording
+from service import get_vdr_reclist, get_vdr_timerlist, is_active_recording, vdr_rec_dir, scan_dir, dest_dir vdr_port
 
 
 __addon__ = xbmcaddon.Addon()
