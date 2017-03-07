@@ -108,9 +108,13 @@ if __name__ == '__main__':
     # Settings:
     try:
         vdr_rec_dir = __setting__('recdir')
+    except ValueError:
+        vdr_rec_dir = 'home/kodi/Aufnahmen'
+
+    try:
         scan_dir = __setting__('scandir')
     except ValueError:
-        sys.exit(1)
+        scan_dir = '/home/kodi/tmp'
 
     items = []
     pre_select = []
@@ -147,5 +151,4 @@ if __name__ == '__main__':
                 continue
 
     del dialog
-    sys.exit(0)
-    
+ 
