@@ -106,21 +106,16 @@ class MultiChoiceDialog(pyxbmct.AddonDialogWindow):
 
 
 if __name__ == '__main__':
-    # Settings:
     vdr_dir = get_vdr_dir()
     scan_dir = get_scan_dir()
+    reclist = get_vdr_reclist(vdr_dir)
+    timerlist = get_vdr_timerlist()
 
     items = []
     pre_select = []
 
-    reclist = get_vdr_reclist(vdr_dir)
-    timerlist = get_vdr_timerlist()
-
     for index, rec in enumerate(reclist):
-        if is_active_recording(rec, timerlist):
-            prefix = '*'
-        else:
-            prefix = ' '
+        prefix = '*' if is_active_recording(rec, timerlist) else ' '
         item = '{}{} {}: {} ({})'.format(prefix, convert_date(rec['recording']['start'], time_fmt, '%d.%m.%Y %H:%M'), rec['recording']['channel'], rec['recording']['title'], rec['recording']['subtitle'])
         items.append(item)
 
