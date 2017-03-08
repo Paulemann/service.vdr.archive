@@ -15,7 +15,6 @@ from service import get_vdr_reclist, get_vdr_timerlist, is_active_recording, get
 
 
 __addon__ = xbmcaddon.Addon()
-__setting__ = __addon__.getSetting
 __addon_path__ = __addon__.getAddonInfo('path')
 __check_icon__ = os.path.join(__addon_path__, 'check.png') # Don't decode _path to utf-8!!!
 __checked_icon__ = os.path.join(__addon_path__, 'checked.png') # Don't decode _path to utf-8!!!
