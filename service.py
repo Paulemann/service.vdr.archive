@@ -78,6 +78,14 @@ def load_addon_settings():
     return
 
 
+def get_vdr_dir():
+    return vdr_dir
+
+
+def get_scan_dir():
+    return scan_dir
+
+
 def mixed_decoder(unicode_error):
     err_str = unicode_error[1]
     err_len = unicode_error.end - unicode_error.start
@@ -497,7 +505,7 @@ if __name__ == '__main__':
     vdr_reclist = set()
 
     while not monitor.abortRequested():
-        vdr_reclist = monitor_source(vdr_rec_dir, addnew=add_new)
+        vdr_reclist = monitor_source(vdr_dir, addnew=add_new)
         archive_reclist = get_vdr_reclist(scan_dir, expand=True, sort=False)
         vdr_timerlist = get_vdr_timerlist()
 
