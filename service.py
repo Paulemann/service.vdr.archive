@@ -73,7 +73,8 @@ def load_addon_settings():
     except:
         dest_dir = '/home/kodi/Videos'
 
-    xbmc.log(msg='[{}] Settings loaded.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+    if __name__ == '__main__':
+        xbmc.log(msg='[{}] Settings loaded.'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
     return
 
@@ -521,3 +522,5 @@ if __name__ == '__main__':
 
         if monitor.waitForAbort(float(sleep_time)):
             break
+else:
+    load_addon_settings()
