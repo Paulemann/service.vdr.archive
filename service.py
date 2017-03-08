@@ -36,7 +36,7 @@ class MyMonitor( xbmc.Monitor ):
 
 
 def load_addon_settings():
-    global sleep_time, add_new, del_source, vdr_rec_dir, vdr_port, scan_dir, dest_dir
+    global sleep_time, add_new, del_source, vdr_dir, vdr_port, scan_dir, dest_dir
 
     try:
         sleep_time = int(__setting__('sleep'))
@@ -59,9 +59,9 @@ def load_addon_settings():
         add_new = False
 
     try:
-        vdr_rec_dir = __setting__('recdir')
+        vdr_dir = __setting__('recdir')
     except:
-        vdr_rec_dir = '/home/kodi/Aufnahmen'
+        vdr_dir = '/home/kodi/Aufnahmen'
 
     try:
         scan_dir = __setting__('scandir')
