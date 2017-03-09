@@ -1,6 +1,6 @@
 # service.vdr.archive
 
-kodi addon to archive VDR recordings as mp4 video files.
+Kodi addon to archive VDR recordings as mp4 video files.
 
 The addon installs both a service and a script. The script can be 
 invoked from the kodi GUI and lets you select locally stored VDR 
@@ -11,7 +11,7 @@ one by one into an mp4 video file at the configured destination.
 
 If a file is currently being played or recorded conversion is postponed 
 until playback/recording has completed. Any ongoing recording is marked 
-with a leading * in the seletion list.
+with a leading * in the selection list.
 
 The following optional settings can be configured:
 - Remove the source file after successful conversion
@@ -21,9 +21,12 @@ The addon supports only Linux platforms where VDR resides on the same
 machine with kodi. Currently only German and English translations are
 provided.
 
-The addon was developed and tested on Ubuntu Desktop 16.04 with kodi 17 
+The addon was developed and tested on Ubuntu Desktop 16.04 with Kodi 17 
 (Krypton). However, use at your own risk and please be aware that the 
 addon code is still in beta status.
 
 To install simply download the addon files as zip file and install from
 the kodi addon section.
+
+My sepcial credits go to Roman_V_M of Team-Kodi whose PyXBMCt framework 
+helped me to easily create the selection dialog for this addon.
