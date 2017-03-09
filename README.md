@@ -23,3 +23,6 @@ provided.
 The addon was developed and tested on Ubuntu Desktop 16.04 with kodi 17 
 (Krypton). However, use at your own risk and please be aware that the 
 addon code is still in beta status.
+
+To install simply download the addon files as zip file and install from
+the kodi addon section.
