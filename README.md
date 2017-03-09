@@ -18,7 +18,7 @@ The following optional settings can be configured:
 - Add new recordings automatically to the list of items to be converted.
 
 The addon supports only Linux platforms where VDR resides on the same
-machine with kodi. Currently only German and English translations are
+machine with Kodi. Currently only German and English translations are
 provided.
 
 The addon was developed and tested on Ubuntu Desktop 16.04 with Kodi 17 
@@ -26,7 +26,7 @@ The addon was developed and tested on Ubuntu Desktop 16.04 with Kodi 17
 addon code is still in beta status.
 
 To install simply download the addon files as zip file and install from
-the kodi addon section.
+the Kodi addon section.
 
 My sepcial credits go to Roman_V_M of Team-Kodi whose PyXBMCt framework 
 helped me to easily create the selection dialog for this addon.
