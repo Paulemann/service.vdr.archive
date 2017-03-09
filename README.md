@@ -9,8 +9,9 @@ placed in the configured scan folder. The service will periodically
 monitor the scan folder for changes and convert all newly added items 
 one by one into an mp4 video file at the configured destination.
 
-If a recording is currently being played the conversion is postponed 
-until playback has completed.
+If a file is currently being played or recorded conversion is postponed 
+until playback/recording has completed. Any ongoing recording is marked 
+with a leading * in the seletion list.
 
 The following optional settings can be configured:
 - Remove the source file after successful conversion
