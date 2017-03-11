@@ -431,7 +431,7 @@ def convert(rec, dest, delsource='False'):
         if not os.path.exists(dest):
             os.makedirs(dest)
     except:
-        xbmc.log(msg='[{}] Error creating destination folder \'{}\'. Abort.'.format(__addon_id__, dest), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Error creating destination directory \'{}\'. Abort.'.format(__addon_id__, dest), level=xbmc.LOGNOTICE)
         return
 
     if rec['recording']['subtitle']:
@@ -495,7 +495,7 @@ def convert(rec, dest, delsource='False'):
         if os.path.exists(outfilename):
             xbmc.log(msg='[{}] Conversion completed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
         else:
-            xbmc.log(msg='[{}] Conversion failed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Conversion failed for unknown reason.'.format(__addon_id__), level=xbmc.LOGNOTICE)
             return
 
         os.chmod(outfilename, 0664)
