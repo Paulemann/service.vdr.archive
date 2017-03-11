@@ -431,6 +431,7 @@ def convert(rec, dest, delsource='False'):
         if not os.path.exists(dest):
             os.makedirs(dest)
     except:
+        xbmc.log(msg='[{}] Error creating destination folder \'{}\'. Abort.'.format(__addon_id__, dest), level=xbmc.LOGNOTICE)
         return
 
     if rec['recording']['subtitle']:
@@ -446,6 +447,7 @@ def convert(rec, dest, delsource='False'):
 
     if os.path.exists(outfilename) and not os.path.exists(vdrfilename):
         # either skip if file exists:
+        xbmc.log(msg='[{}]  Output file \'{}\' already exists. Abort.'.format(__addon_id__, os.path.basename(outfilename)), level=xbmc.LOGNOTICE)
         return
         # or always replace:
         #os.remove(outfilename)
@@ -465,7 +467,7 @@ def convert(rec, dest, delsource='False'):
         tsfiles.sort()
 
         try:
-            outfile = open(vdrfilename, 'wb')
+            tmpfile = open(vdrfilename, 'wb')
         except:
             xbmc.log(msg='[{}] Error creating temporary file \'{}\'.'.format(__addon_id__, vdrfilename), level=xbmc.LOGNOTICE)
             return
@@ -480,9 +482,9 @@ def convert(rec, dest, delsource='False'):
                     bytes = infile.read(readsize)
                     if not bytes:
                         break
-                    outfile.write(bytes)
+                    tmpfile.write(bytes)
             #infile.close()
-        outfile.close()
+        tmpfile.close()
 
         xbmc.log(msg='[{}] Start conversion to output file \'{}\' ...'.format(__addon_id__, os.path.basename(outfilename)), level=xbmc.LOGNOTICE)
         try:
@@ -490,14 +492,18 @@ def convert(rec, dest, delsource='False'):
         except:
             xbmc.log(msg='[{}] Error creating output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename)), level=xbmc.LOGNOTICE)
             return
-        xbmc.log(msg='[{}] Conversion completed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+        if os.path.exists(outfilename):
+            xbmc.log(msg='[{}] Conversion completed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+        else:
+            xbmc.log(msg='[{}] Conversion failed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+            return
 
         os.chmod(outfilename, 0664)
         os.remove(vdrfilename)
         if os.path.islink(rec['path']):
             os.unlink(rec['path'])
 
-        if delsource and os.access(recdir, os.W_OK) and os.path.exists(outfilename):
+        if delsource and os.access(recdir, os.W_OK): 
             try:
                 for file in os.listdir(recdir):
                     os.remove(os.path.join(recdir, file))
