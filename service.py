@@ -438,8 +438,10 @@ def convert(rec, dest, delsource='False'):
     else:
         recname = rec['recording']['title'] + '_' + rec['recording']['channel'] + '_' + rec['recording']['start']
 
-    vdrfilename = os.path.join(dest, recname + '.vdr')
-    #vdrfilename = os.path.join(recdir, recname + '.vdr') # this raised an error: permissions denied to write in recdir
+    if os.access(recdir, os.W_OK):
+        vdrfilename = os.path.join(recdir, recname + '.vdr')
+    else:
+        vdrfilename = os.path.join(dest, recname + '.vdr')
     outfilename = os.path.join(dest, recname + '.mp4')
 
     if os.path.exists(outfilename) and not os.path.exists(vdrfilename):
@@ -452,7 +454,7 @@ def convert(rec, dest, delsource='False'):
         return
 
     try:
-        xbmc.log(msg='[{}] Archiving thread started. Archiving {} as {}...'.format(__addon_id__, recdir, outfilename), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Archiving thread started. Archiving \'{}\' ...'.format(__addon_id__, recdir), level=xbmc.LOGNOTICE)
 
         if os.path.exists(vdrfilename):
             os.remove(vdrfilename)
@@ -465,30 +467,49 @@ def convert(rec, dest, delsource='False'):
         try:
             outfile = open(vdrfilename, 'wb')
         except:
-            xbmc.log(msg='[{}] Error {}'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Error creating temporary file \'{}\'.'.format(__addon_id__, vdrfilename), level=xbmc.LOGNOTICE)
+            return
+
         for file in tsfiles:
-            xbmc.log(msg='[{}] Merging file {}'.format(__addon_id__, file), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Merging file \'{}\' into temporary file \'{}\'.'.format(__addon_id__, file, os.path.basename(vdrfilename)), level=xbmc.LOGNOTICE)
 
             fpath = os.path.join(recdir, file)
-            infile = open(fpath, 'rb')
-            while True:
-                bytes = infile.read(readsize)
-                if not bytes:
-                    break
-                outfile.write(bytes)
-            infile.close()
+            #infile = open(fpath, 'rb')
+            with open(fpath, 'rb') as infile:
+                while True:
+                    bytes = infile.read(readsize)
+                    if not bytes:
+                        break
+                    outfile.write(bytes)
+            #infile.close()
         outfile.close()
 
-        xbmc.log(msg='[{}] Starting conversion with ffmpeg ...'.format(__addon_id__), level=xbmc.LOGNOTICE)
-
-        subprocess.check_call(['ffmpeg', '-v', '10', '-i', vdrfilename, '-vcodec', 'libx264', '-acodec', 'copy', outfilename], preexec_fn=lambda: os.nice(19))
+        xbmc.log(msg='[{}] Start conversion to output file \'{}\' ...'.format(__addon_id__, os.path.basename(outfilename)), level=xbmc.LOGNOTICE)
+        try:
+            subprocess.check_call(['ffmpeg', '-v', '10', '-i', vdrfilename, '-vcodec', 'libx264', '-acodec', 'copy', outfilename], preexec_fn=lambda: os.nice(19))
+        except:
+            xbmc.log(msg='[{}] Error creating output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename)), level=xbmc.LOGNOTICE)
+            return
+        xbmc.log(msg='[{}] Conversion completed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
         os.chmod(outfilename, 0664)
         os.remove(vdrfilename)
         if os.path.islink(rec['path']):
             os.unlink(rec['path'])
-        if delsource:
-            os.remove(recdir)
+
+        if delsource and os.access(recdir, os.W_OK) and os.path.exists(outfilename):
+            try:
+                for file in os.listdir(recdir):
+                    os.remove(os.path.join(recdir, file))
+                    xbmc.log(msg='[{}] Delete source: Removing source file \'{}\'.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+                if not os.listdir(recdir):
+                    os.rmdir(recdir)
+                else:
+                    xbmc.log(msg='[{}] Delete source: Couldn\'t cleanup source directory.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+                if not os.listdir(os.path.dirname(recdir)) and os.access(os.path.dirname(recdir), os.W_OK):
+                    os.rmdir(os.path.dirname(recdir))
+            except OSError:
+                xbmc.log(msg='[{}] Delete source: Permissions denied.'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
     finally:
         xbmc.log(msg='[{}] Archiving thread completed with error: {}.'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
