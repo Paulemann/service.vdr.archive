@@ -65,9 +65,9 @@ class MultiChoiceDialog(pyxbmct.AddonDialogWindow):
     def set_controls(self):
         self.listing = pyxbmct.List(_imageWidth=15)
         self.placeControl(self.listing, 0, 0, rowspan=9, columnspan=10)
-        self.ok_button = pyxbmct.Button(__localize__(30011))
+        self.ok_button = pyxbmct.Button(__localize__(30021))
         self.placeControl(self.ok_button, 9, 3, columnspan=2)
-        self.cancel_button = pyxbmct.Button(__localize__(30012))
+        self.cancel_button = pyxbmct.Button(__localize__(30022))
         self.placeControl(self.cancel_button, 9, 5, columnspan=2)
 
     def connect_controls(self):
@@ -122,7 +122,7 @@ if __name__ == '__main__':
         if os.path.islink(os.path.join(scan_dir, os.path.basename(rec['path']))):
             pre_select.append(index)
 
-    dialog = MultiChoiceDialog(__localize__(30010), items, pre_select)
+    dialog = MultiChoiceDialog(__localize__(30020), items, pre_select)
     dialog.doModal()
 
     if dialog.selected is not None:
