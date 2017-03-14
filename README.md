@@ -21,9 +21,9 @@ Under advanced settings you may specify how the output file is composed
 (e.g. add channel and timer info as well as season and episode info for
 tv shows to the title) and if the converted video files shall be placed 
 into folders with the respective title name. Adiitionally, the addon can 
-extract the genre info from the recording data and may create folders 
-accordingly (currently english genre names only) for grouping of the 
-converted video files.
+extract the genre info (as defined in ETSI EN 300 468, table 28) from the 
+VDR recording data and may create folders accordingly (currently English 
+genre names only) for grouping of the converted video files.
 
 The addon supports only Linux platforms where VDR resides on the same
 machine with Kodi. Currently only German and English translations are
