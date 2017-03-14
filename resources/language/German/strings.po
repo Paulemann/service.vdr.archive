@@ -62,14 +62,38 @@ msgid "Time between checks (seconds)"
 msgstr "Zeit zwischen Überprüfungen (in Sek.)"
 
 msgctxt "#30010"
+msgid "Advanced"
+msgstr "Erweitert"
+
+msgctxt "#30011"
+msgid "Expand title with seasosn/episode info"
+msgstr "Titel um Staffel und Folge erweitern"
+
+msgctxt "#30012"
+msgid "Expand title with channel info"
+msgstr "Titel um Sendernamen erweitern"
+
+msgctxt "#30013"
+msgid "Expand title with timer info"
+msgstr "Titel um Aufnahmedatum erweitern"
+
+msgctxt "#30014"
+msgid "Create separate directory per title"
+msgstr "Titel/Serien in eigenem Verzeichnis ablegen"
+
+msgctxt "#30015"
+msgid "Create separate directory per genre"
+msgstr "Automatisch Genreordner anlegen"
+
+msgctxt "#30020"
 msgid "Select recordings to archive"
 msgstr "Aufnahmen zur Archivierung auswählen"
 
-msgctxt "#30011"
+msgctxt "#30021"
 msgid "OK"
 msgstr "OK"
 
-msgctxt "#30012"
+msgctxt "#30022"
 msgid "Cancel"
 msgstr "Abbruch"
 
