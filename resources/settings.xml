@@ -8,5 +8,12 @@
         <setting label="30005" type="bool" id="addnew" default="false" />
         <setting label="30006" type="number" id="pvrport" default="34890" />
         <setting label="30007" type="number" id="sleep" default="300" />
-      </category>
+    </category>
+    <category label="30010">
+        <setting label="30011" type="bool" id="addepisode" default="false" />
+        <setting label="30012" type="bool" id="addchannel" default="true" />
+        <setting label="30013" type="bool" id="addstarttime" default="true" />
+        <setting label="30014" type="bool" id="createtitle" default="false" />
+        <setting label="30015" type="bool" id="creategenre" default="false" />
+    </category>
 </settings>
