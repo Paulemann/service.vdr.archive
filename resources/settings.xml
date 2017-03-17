@@ -15,5 +15,6 @@
         <setting label="30013" type="bool" id="addstarttime" default="true" />
         <setting label="30014" type="bool" id="createtitle" default="false" />
         <setting label="30015" type="bool" id="creategenre" default="false" />
+        <setting label="30016" type="bool" id="groupshows" default="false" />
     </category>
 </settings>
