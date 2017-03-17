@@ -23,88 +23,89 @@ import threading
 __addon__ = xbmcaddon.Addon()
 __setting__ = __addon__.getSetting
 __addon_id__ = __addon__.getAddonInfo('id')
+__localize__ = __addon__.getLocalizedString
 
 
 time_fmt = '%Y-%m-%d %H:%M:%S'
 
-
 genres = {
-    '00': 'Miscellaneous',
-    '10': 'Movies',
-    '11': 'Thriller',
-    '12': 'Adventure, Western And War',
-    '13': 'Science Fiction, Fantasy And Horror',
-    '14': 'Comedy',
-    '15': 'Soap',
-    '16': 'Romance',
-    '17': 'Historical Movies And Dramas',
-    '18': 'Adult Movies',
-    '20': 'News',
-    '21': 'News Reports',
-    '22': 'News Magazines',
-    '23': 'Documentaries',
-    '24': 'Discussions',
-    '30': 'Shows',
-    '31': 'Game Shows',
-    '32': 'Variety Shows',
-    '33': 'Talk Shows',
-    '40': 'Sports',
-    '41': 'Special Events',
-    '42': 'Sports Magazines',
-    '43': 'Football And Soccer',
-    '44': 'Tennis And Squash',
-    '45': 'Team Sports',
-    '46': 'Athletics',
-    '47': 'Motor Sports',
-    '48': 'Water Sport',
-    '49': 'Winter Sports',
-    '4A': 'Equestrian',
-    '4B': 'Martial Sports',
-    '50': 'Kids',
-    '51': 'Pre-school',
-    '52': 'Kids 6 to 14',
-    '53': 'Kids 10 to 16',
-    '54': 'Educational',
-    '55': 'Cartoons',
-    '60': 'Music',
-    '61': 'Rock and Pop',
-    '62': 'Classical Music',
-    '63': 'Folk And Traditional Music',
-    '64': 'Jazz',
-    '65': 'Musicals And Operas',
-    '66': 'Ballet',
-    '70': 'Culture',
-    '71': 'Performing Arts',
-    '72': 'Fine Arts',
-    '73': 'Religion',
-    '74': 'Pop Culture And Tradtional Arts',
-    '75': 'Literature',
-    '76': 'Film And Cinema',
-    '77': 'Experimental Films',
-    '78': 'Broadcasting And Press',
-    '79': 'New Media',
-    '7A': 'Arts Magazines',
-    '7B': 'Fashion',
-    '80': 'Social Issues And Economics',
-    '81': 'Reports And Documentareis',
-    '82': 'Economics And Social Advisories',
-    '83': 'Remarkable People',
-    '90': 'Science',
-    '91': 'Nature',
-    '92': 'Technology',
-    '93': 'Medicine',
-    '94': 'Foreign Countries',
-    '95': 'Social And Spiritual Sciences',
-    '96': 'Further Education',
-    '97': 'Languages',
-    'A0': 'Hobbies',
-    'A1': 'Travel',
-    'A2': 'Handicraft',
-    'A3': 'Motoring',
-    'A4': 'Fitness And Health',
-    'A5': 'Cooking',
-    'A6': 'Shopping',
-    'A7': 'Gardening',
+    '00': __localize__(30100),
+    '10': __localize__(30116),
+    '11': __localize__(30117),
+    '12': __localize__(30118),
+    '13': __localize__(30119),
+    '14': __localize__(30120),
+    '15': __localize__(30121),
+    '16': __localize__(30122),
+    '17': __localize__(30123),
+    '18': __localize__(30124),
+    '20': __localize__(30132),
+    '21': __localize__(30133),
+    '22': __localize__(30134),
+    '23': __localize__(30135),
+    '24': __localize__(30136),
+    '30': __localize__(30148),
+    '31': __localize__(30149),
+    '32': __localize__(30150),
+    '33': __localize__(30151),
+    '40': __localize__(30164),
+    '41': __localize__(30165),
+    '42': __localize__(30166),
+    '43': __localize__(30167),
+    '44': __localize__(30168),
+    '45': __localize__(30169),
+    '46': __localize__(30170),
+    '47': __localize__(30171),
+    '48': __localize__(30172),
+    '49': __localize__(30173),
+    '4A': __localize__(30174),
+    '4B': __localize__(30175),
+    '50': __localize__(30180),
+    '51': __localize__(30181),
+    '52': __localize__(30182),
+    '53': __localize__(30183),
+    '54': __localize__(30184),
+    '55': __localize__(30186),
+    '60': __localize__(30196),
+    '61': __localize__(30197),
+    '62': __localize__(30198),
+    '63': __localize__(30199),
+    '64': __localize__(30200),
+    '65': __localize__(30201),
+    '66': __localize__(30202),
+    '70': __localize__(30212),
+    '71': __localize__(30213),
+    '72': __localize__(30214),
+    '73': __localize__(30215),
+    '74': __localize__(30216),
+    '75': __localize__(30217),
+    '76': __localize__(30218),
+    '77': __localize__(30219),
+    '78': __localize__(30220),
+    '79': __localize__(30221),
+    '7A': __localize__(30222),
+    '7B': __localize__(30223),
+    '80': __localize__(30228),
+    '81': __localize__(30229),
+    '82': __localize__(30230),
+    '83': __localize__(30231),
+    '90': __localize__(30244),
+    '91': __localize__(30245),
+    '92': __localize__(30246),
+    '93': __localize__(30247),
+    '94': __localize__(30248),
+    '95': __localize__(30249),
+    '96': __localize__(30250),
+    '97': __localize__(30251),
+    'A0': __localize__(30260),
+    'A1': __localize__(30261),
+    'A2': __localize__(30262),
+    'A3': __localize__(30263),
+    'A4': __localize__(30264),
+    'A5': __localize__(30265),
+    'A6': __localize__(30266),
+    'A7': __localize__(30267),
+    'F0': __localize__(30300)
 }
 
 
@@ -117,7 +118,7 @@ class MyMonitor( xbmc.Monitor ):
 
 
 def load_addon_settings():
-    global sleep_time, add_episode, add_channel, add_starttime, add_new, create_title, create_genre, del_source, vdr_dir, vdr_port, scan_dir, dest_dir
+    global sleep_time, add_episode, add_channel, add_starttime, add_new, create_title, create_genre, del_source, vdr_dir, vdr_port, scan_dir, dest_dir, group_shows
 
     try:
         sleep_time = int(__setting__('sleep'))
@@ -163,6 +164,11 @@ def load_addon_settings():
         create_genre = True if __setting__('creategenre').lower() == 'true' else False
     except:
         create_genre = False
+
+    try:
+        group_shows = True if __setting__('groupshows').lower() == 'true' else False
+    except:
+        group_shows = False
 
     try:
         vdr_dir = __setting__('recdir')
@@ -264,8 +270,8 @@ def get_vdr_recinfo(recdir, extended=False):
                 channel =  line[2:].split(' ', 1)[1].rstrip('\n')
                 str_channel =  ', TV (' + channel + ')'
             if line[:2] == 'E ':
-                estart = int(line[2:].split(' ')[1].rstrip('\n'))
-                length = int(line[2:].split(' ')[2].rstrip('\n'))
+                estart = int(line[2:].split(' ')[1])
+                length = int(line[2:].split(' ')[2])
                 #start = time.strftime(time_fmt, time.localtime(estart))
                 #end = time.strftime(time_fmt, time.localtime(estart + length))
 
@@ -292,8 +298,7 @@ def get_vdr_recinfo(recdir, extended=False):
                     if match_episode:
                         episode = int(match_episode.group(1))
                 if line[:2] == 'G ':
-                    str_genre = line[2:].split(' ', 1)[0].rstrip('\n')
-                    genre = int(str_genre, 16)
+                    genre = line[2:].split()
         f.close()
 
     except (IOError, OSError):
@@ -441,7 +446,7 @@ def get_vdr_channel(channelid):
     return channel
 
 
-def get_vdr_timerlist():
+def get_timers():
     GET_TIMERS = {
         'jsonrpc': '2.0',
         'method': 'PVR.GetTimers',
@@ -450,7 +455,7 @@ def get_vdr_timerlist():
             },
         'id': 1
     }
-    timerlist = []
+    timers = []
 
     try:
         data = json_request(GET_TIMERS, 'localhost')
@@ -460,14 +465,14 @@ def get_vdr_timerlist():
                 #start = utc_to_local(list[i]['starttime'], time_fmt)
                 #end = utc_to_local(list[i]['endtime'], time_fmt)
                 timer = {'id':list[i]['timerid'], 'title':list[i]['title'].encode('utf-8'), 'channel':get_vdr_channel(list[i]['channelid']), 'start':utc_to_local(list[i]['starttime'], time_fmt), 'end':utc_to_local(list[i]['endtime'], time_fmt), 'state':list[i]['state']}
-                timerlist.append(timer)
+                timers.append(timer)
     except KeyError:
         pass
 
-    return timerlist
+    return timers
 
 
-def get_vdr_reclist(topdir, expand=False, sort=True):
+def get_recs(topdir, expand=False, sort=True):
     GET_RECS = {
         'jsonrpc': '2.0',
         'method': 'PVR.GetRecordings',
@@ -476,7 +481,7 @@ def get_vdr_reclist(topdir, expand=False, sort=True):
             },
         'id': 1
     }
-    reclist = []
+    recs = []
 
     for path, dirs, files in os.walk(topdir, followlinks=True):
         if path.endswith('.rec'):
@@ -484,7 +489,7 @@ def get_vdr_reclist(topdir, expand=False, sort=True):
                 continue
             if 'info' in files and '00001.ts' in files:
                 rec = {'path':path, 'recording':get_vdr_recinfo(path, extended=expand)}
-                reclist.append(rec)
+                recs.append(rec)
 
     if expand:
         try:
@@ -496,7 +501,7 @@ def get_vdr_reclist(topdir, expand=False, sort=True):
                     end = utc_to_local(list[i]['endtime'], time_fmt)
                     title = list[i]['title'].encode('utf-8')
                     channel = list[i]['channel'].encode('utf-8')
-                    for rec in reclist:
+                    for rec in recs:
                         if title in rec['recording']['title'] and channel in rec['recording']['channel'] and start in rec['recording']['start']:
                             file = urllib2.unquote(list[i]['file'].encode('utf-8'))
                             rec['recording']['id'] = list[i]['recordingid']
@@ -505,18 +510,16 @@ def get_vdr_reclist(topdir, expand=False, sort=True):
             pass
 
     if sort:
-        # first, always sort by date
-        newlist = sorted(reclist, key=lambda k: k['recording']['start'])
+        # first sort by date
+        recs = sorted(recs, key=lambda k: k['recording']['start'])
         # then sort by title
-        newlist = sorted(newlist, key=lambda k: k['recording']['title'])
+        recs = sorted(recs, key=lambda k: k['recording']['title'])
 
-        return newlist
-
-    return reclist
+    return recs
 
 
-def is_active_recording(rec, timerlist):
-    if not rec or not timerlist:
+def is_active_recording(rec, timers):
+    if not rec or not timers:
         return False
 
     try:
@@ -533,7 +536,7 @@ def is_active_recording(rec, timerlist):
 
     now = int(time.mktime(time.localtime()))
 
-    for timer in timerlist:
+    for timer in timers:
         if timer['state'] == 'recording':
             timer_start = int(time.mktime(time.strptime(timer['start'], time_fmt)))
             timer_end = int(time.mktime(time.strptime(timer['end'], time_fmt)))
@@ -558,13 +561,17 @@ def convert(rec, dest, delsource='False'):
         return
 
     destdir = dest
-    if create_genre:
-        genre_idx = format(rec['recording']['genre'], '#04x')[2:]
-        genre_name = genres[genre_idx]
-        if not genre_name:
-            genre_name = genres['00']
-        destdir = os.path.join(destdir, genre_name)
-    if create_title:
+
+    main_genre_name = genres['F0' if group_shows and rec['recording']['episode'] > 0 else (rec['recording']['genre'][0][:-1]  + '0')]
+    genre_name = genres[rec['recording']['genre'][0]]
+    if create_genre or (group_shows and rec['recording']['episode'] > 0):
+        if main_genre_name:
+            destdir = os.path.join(destdir, main_genre_name)
+    if create_genre and ((group_shows and rec['recording']['episode'] > 0) or rec['recording']['genre'][0][-1] != '0'):
+        if genre_name:
+            destdir = os.path.join(destdir, genre_name)
+
+    if create_title or group_shows:
         destdir = os.path.join(destdir, rec['recording']['title'])
 
     try:
@@ -680,11 +687,11 @@ if __name__ == '__main__':
 
     while not monitor.abortRequested():
         vdr_reclist = monitor_source(vdr_dir, addnew=add_new)
-        archive_reclist = get_vdr_reclist(scan_dir, expand=True, sort=False)
-        vdr_timerlist = get_vdr_timerlist()
+        to_archive = get_recs(scan_dir, expand=True, sort=False)
+        vdr_timers = get_timers()
 
-        for rec in archive_reclist:
-            if is_now_playing(rec) or is_active_recording(rec, vdr_timerlist):
+        for rec in to_archive:
+            if is_now_playing(rec) or is_active_recording(rec, vdr_timers):
                 continue
             else:
                 t = threading.Thread(target=convert, args=(rec, dest_dir, del_source))
