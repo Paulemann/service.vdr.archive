@@ -78,11 +78,15 @@ msgid "Expand title with timer info"
 msgstr ""
 
 msgctxt "#30014"
-msgid "Create separate directory per title"
+msgid "Create a separate directory per title/show name"
 msgstr ""
 
 msgctxt "#30015"
-msgid "Create separate directory per genre"
+msgid "Create genre directories (according to EN 300 468)"
+msgstr ""
+
+msgctxt "#30016"
+msgid "Group TV shows in a separate directory"
 msgstr ""
 
 msgctxt "#30020"
@@ -96,3 +100,312 @@ msgstr ""
 msgctxt "#30022"
 msgid "Cancel"
 msgstr ""
+
+msgctxt "#30100"
+msgid "Miscellaneous"
+msgstr ""
+
+msgctxt "#30116"
+msgid "Movies"
+msgstr ""
+
+msgctxt "#30117"
+msgid "Thriller"
+msgstr ""
+
+msgctxt "#30118"
+msgid "Adventure, Western And War"
+msgstr ""
+
+msgctxt "#30119"
+msgid "Science Fiction, Fantasy And Horror"
+msgstr ""
+
+msgctxt "#30120"
+msgid "Comedy"
+msgstr ""
+
+msgctxt "#30121"
+msgid "Soap"
+msgstr ""
+
+msgctxt "#30122"
+msgid "Romance"
+msgstr ""
+
+msgctxt "#30123"
+msgid "Historical Movies And Dramas"
+msgstr ""
+
+msgctxt "#30124"
+msgid "Adult Movies"
+msgstr ""
+
+msgctxt "#30132"
+msgid "News"
+msgstr ""
+
+msgctxt "#30133"
+msgid "News Reports"
+msgstr ""
+
+msgctxt "#30134"
+msgid "News Magazines"
+msgstr ""
+
+msgctxt "#30135"
+msgid "Documentaries"
+msgstr ""
+
+msgctxt "#30136"
+msgid "Discussions"
+msgstr ""
+
+msgctxt "#30148"
+msgid "Shows"
+msgstr ""
+
+msgctxt "#30149"
+msgid "Game Shows"
+msgstr ""
+
+msgctxt "#30150"
+msgid "Variety Shows"
+msgstr ""
+
+msgctxt "#30151"
+msgid "Talk Shows"
+msgstr ""
+
+msgctxt "#30164"
+msgid "Sports"
+msgstr ""
+
+msgctxt "#30165"
+msgid "Special Events"
+msgstr ""
+
+msgctxt "#30166"
+msgid "Sports Magazines"
+msgstr ""
+
+msgctxt "#30167"
+msgid "Football And Soccer"
+msgstr ""
+
+msgctxt "#30168"
+msgid "Tennis And Squash"
+msgstr ""
+
+msgctxt "#30169"
+msgid "Team Sports"
+msgstr ""
+
+msgctxt "#30170"
+msgid "Athletics"
+msgstr ""
+
+msgctxt "#30171"
+msgid "Motor Sports"
+msgstr ""
+
+msgctxt "#30172"
+msgid "Water Sport"
+msgstr ""
+
+msgctxt "#30173"
+msgid "Winter Sports"
+msgstr ""
+
+msgctxt "#30174"
+msgid "Equestrian"
+msgstr ""
+
+msgctxt "#30175"
+msgid "Martial Sports"
+msgstr ""
+
+msgctxt "#30180"
+msgid "Kids"
+msgstr ""
+
+msgctxt "#30181"
+msgid "Pre-school"
+msgstr ""
+
+msgctxt "#30182"
+msgid "Kids 6 to 14"
+msgstr ""
+
+msgctxt "#30183"
+msgid "Kids 10 to 16"
+msgstr ""
+
+msgctxt "#30184"
+msgid "Educational"
+msgstr ""
+
+msgctxt "#30185"
+msgid "Cartoons"
+msgstr ""
+
+msgctxt "#30196"
+msgid "Music"
+msgstr ""
+
+msgctxt "#30197"
+msgid "Rock and Pop"
+msgstr ""
+
+msgctxt "#30198"
+msgid "Classical Music"
+msgstr ""
+
+msgctxt "#30199"
+msgid "Folk And Traditional Music"
+msgstr ""
+
+msgctxt "#30200"
+msgid "Jazz"
+msgstr ""
+
+msgctxt "#30201"
+msgid "Musicals And Operas"
+msgstr ""
+
+msgctxt "#30202"
+msgid "Ballet"
+msgstr ""
+
+msgctxt "#30212"
+msgid "Culture"
+msgstr ""
+
+msgctxt "#30213"
+msgid "Performing Arts"
+msgstr ""
+
+msgctxt "#30214"
+msgid "Fine Arts"
+msgstr ""
+
+msgctxt "#30215"
+msgid "Religion"
+msgstr ""
+
+msgctxt "#30216"
+msgid "Pop Culture And Tradtional Arts"
+msgstr ""
+
+msgctxt "#30217"
+msgid "Literature"
+msgstr ""
+
+msgctxt "#30218"
+msgid "Film And Cinema"
+msgstr ""
+
+msgctxt "#30219"
+msgid "Experimental Films"
+msgstr ""
+
+msgctxt "#30220"
+msgid "Broadcasting And Press"
+msgstr ""
+
+msgctxt "#30221"
+msgid "New Media"
+msgstr ""
+
+msgctxt "#30222"
+msgid "Arts Magazines"
+msgstr ""
+
+msgctxt "#30223"
+msgid "Fashion"
+msgstr ""
+
+msgctxt "#30228"
+msgid "Social Issues And Economics"
+msgstr ""
+
+msgctxt "#30229"
+msgid "Reports And Documentaries"
+msgstr ""
+
+msgctxt "#30230"
+msgid "Economics And Social Advisories"
+msgstr ""
+
+msgctxt "#30231"
+msgid "Remarkable People"
+msgstr ""
+
+msgctxt "#30244"
+msgid "Science"
+msgstr ""
+
+msgctxt "#30245"
+msgid "Nature"
+msgstr ""
+
+msgctxt "#30246"
+msgid "Technology"
+msgstr ""
+
+msgctxt "#30247"
+msgid "Medicine"
+msgstr ""
+
+msgctxt "#30248"
+msgid "Foreign Countries"
+msgstr ""
+
+msgctxt "#30249"
+msgid "Social And Spiritual Sciences"
+msgstr ""
+
+msgctxt "#30250"
+msgid "Further Education"
+msgstr ""
+
+msgctxt "#30251"
+msgid "Languages"
+msgstr ""
+
+msgctxt "#30260"
+msgid "Hobbies"
+msgstr ""
+
+msgctxt "#30261"
+msgid "Travel"
+msgstr ""
+
+msgctxt "#30262"
+msgid "Handicraft"
+msgstr ""
+
+msgctxt "#30263"
+msgid "Motoring"
+msgstr ""
+
+msgctxt "#30264"
+msgid "Fitness And Health"
+msgstr ""
+
+msgctxt "#30265"
+msgid "Cooking"
+msgstr ""
+
+msgctxt "#30266"
+msgid "Shopping"
+msgstr ""
+
+msgctxt "#30267"
+msgid "Gardening"
+msgstr ""
+
+msgctxt "#30300"
+msgid "TV Shows"
+msgstr ""
+
