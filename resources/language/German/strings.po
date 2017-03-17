@@ -75,15 +75,19 @@ msgstr "Titel um Sendernamen erweitern"
 
 msgctxt "#30013"
 msgid "Expand title with timer info"
-msgstr "Titel um Aufnahmedatum erweitern"
+msgstr "Titel um Aufnahmedatum/-zeit erweitern"
 
 msgctxt "#30014"
-msgid "Create separate directory per title"
-msgstr "Titel/Serien in eigenem Verzeichnis ablegen"
+msgid "Create a separate directory per title/show name"
+msgstr "Eigenes Verzeichnis pro Titel/Serienname anlegen"
 
 msgctxt "#30015"
-msgid "Create separate directory per genre"
-msgstr "Automatisch Genreordner anlegen"
+msgid "Create genre directories (according to EN 300 468)"
+msgstr "Automatisch Genreordner anlegen (gem. EN 300 468)"
+
+msgctxt "#30016"
+msgid "Group TV shows in a separate directory"
+msgstr "TV-Serien in eigenem Verzeichnis gruppieren"
 
 msgctxt "#30020"
 msgid "Select recordings to archive"
@@ -97,3 +101,310 @@ msgctxt "#30022"
 msgid "Cancel"
 msgstr "Abbruch"
 
+msgctxt "#30100"
+msgid "Miscellaneous"
+msgstr "Diverses"
+
+msgctxt "#30116"
+msgid "Movies"
+msgstr "Filme"
+
+msgctxt "#30117"
+msgid "Thriller"
+msgstr "Thriller"
+
+msgctxt "#30118"
+msgid "Adventure, Western And War"
+msgstr "Abenteuer-, Western- und Kriegsfilme"
+
+msgctxt "#30119"
+msgid "Science Fiction, Fantasy And Horror"
+msgstr "Science-Fiction-, Fantasy- und Horrorfilme"
+
+msgctxt "#30120"
+msgid "Comedy"
+msgstr "Komödien"
+
+msgctxt "#30121"
+msgid "Soap"
+msgstr "Soaps"
+
+msgctxt "#30122"
+msgid "Romance"
+msgstr "Liebesfilme"
+
+msgctxt "#30123"
+msgid "Historical Movies And Dramas"
+msgstr "Historische Filme und Dramen"
+
+msgctxt "#30124"
+msgid "Adult Movies"
+msgstr "Filme für Erwachsene"
+
+msgctxt "#30132"
+msgid "News"
+msgstr "Nachrichten"
+
+msgctxt "#30133"
+msgid "News Reports"
+msgstr "Nachrichtensendungen"
+
+msgctxt "#30134"
+msgid "News Magazines"
+msgstr "Nachrichtenmagazine"
+
+msgctxt "#30135"
+msgid "Documentaries"
+msgstr "Dokumentationen"
+
+msgctxt "#30136"
+msgid "Discussions"
+msgstr "Diskussionen"
+
+msgctxt "#30148"
+msgid "Shows"
+msgstr "Shows"
+
+msgctxt "#30149"
+msgid "Game Shows"
+msgstr "Spielshows"
+
+msgctxt "#30150"
+msgid "Variety Shows"
+msgstr "Unterhaltungsshows"
+
+msgctxt "#30151"
+msgid "Talk Shows"
+msgstr "Talkshows"
+
+msgctxt "#30164"
+msgid "Sports"
+msgstr "Sport"
+
+msgctxt "#30165"
+msgid "Special Events"
+msgstr "Sonderveranstaltungen"
+
+msgctxt "#30166"
+msgid "Sports Magazines"
+msgstr "Sportmagazine"
+
+msgctxt "#30167"
+msgid "Football And Soccer"
+msgstr "Fussball"
+
+msgctxt "#30168"
+msgid "Tennis And Squash"
+msgstr "Tennis und Squash"
+
+msgctxt "#30169"
+msgid "Team Sports"
+msgstr "Mannschaftssport"
+
+msgctxt "#30170"
+msgid "Athletics"
+msgstr "Athletik"
+
+msgctxt "#30171"
+msgid "Motor Sports"
+msgstr "Motorsport"
+
+msgctxt "#30172"
+msgid "Water Sport"
+msgstr "Wassersport"
+
+msgctxt "#30173"
+msgid "Winter Sports"
+msgstr "Wintersport"
+
+msgctxt "#30174"
+msgid "Equestrian"
+msgstr "Reiten"
+
+msgctxt "#30175"
+msgid "Martial Sports"
+msgstr "Kampfsport"
+
+msgctxt "#30180"
+msgid "Kids"
+msgstr "Kinder"
+
+msgctxt "#30181"
+msgid "Pre-school"
+msgstr "Vorschule"
+
+msgctxt "#30182"
+msgid "Kids 6 to 14"
+msgstr "Kinder von 6 bis 14"
+
+msgctxt "#30183"
+msgid "Kids 10 to 16"
+msgstr "Kinder von 10 bis 16"
+
+msgctxt "#30184"
+msgid "Educational"
+msgstr "Pädagogisch"
+
+msgctxt "#30185"
+msgid "Cartoons"
+msgstr "Zeichentrick"
+
+msgctxt "#30196"
+msgid "Music"
+msgstr "Musik"
+
+msgctxt "#30197"
+msgid "Rock and Pop"
+msgstr "Rock und Pop"
+
+msgctxt "#30198"
+msgid "Classical Music"
+msgstr "Klassische Musik"
+
+msgctxt "#30199"
+msgid "Folk And Traditional Music"
+msgstr "Folklore und traditionelle Musik"
+
+msgctxt "#30200"
+msgid "Jazz"
+msgstr "Jazz"
+
+msgctxt "#30201"
+msgid "Musicals And Operas"
+msgstr "Opern und Musicals"
+
+msgctxt "#30202"
+msgid "Ballet"
+msgstr "Ballet"
+
+msgctxt "#30212"
+msgid "Culture"
+msgstr "Kultur"
+
+msgctxt "#30213"
+msgid "Performing Arts"
+msgstr "Darstellende Künste"
+
+msgctxt "#30214"
+msgid "Fine Arts"
+msgstr "Kunstwissenschaften"
+
+msgctxt "#30215"
+msgid "Religion"
+msgstr "Religion"
+
+msgctxt "#30216"
+msgid "Pop Culture And Tradtional Arts"
+msgstr "Popkultur und traditionelle Künste"
+
+msgctxt "#30217"
+msgid "Literature"
+msgstr "Literatur"
+
+msgctxt "#30218"
+msgid "Film And Cinema"
+msgstr "Film und Kino"
+
+msgctxt "#30219"
+msgid "Experimental Films"
+msgstr "Experimentalfilme"
+
+msgctxt "#30220"
+msgid "Broadcasting And Press"
+msgstr "Rundfunk und Presse"
+
+msgctxt "#30221"
+msgid "New Media"
+msgstr "Neue Medien"
+
+msgctxt "#30222"
+msgid "Arts Magazines"
+msgstr "Kunstmagazine"
+
+msgctxt "#30223"
+msgid "Fashion"
+msgstr "Mode"
+
+msgctxt "#30228"
+msgid "Social Issues And Economics"
+msgstr "Wirtschaft und Gesellschaft"
+
+msgctxt "#30229"
+msgid "Reports And Documentaries"
+msgstr "Reportagen und Dokumentationen"
+
+msgctxt "#30230"
+msgid "Economics And Social Advisories"
+msgstr "Wirtschafts- und Sozialratgeber"
+
+msgctxt "#30231"
+msgid "Remarkable People"
+msgstr "Außergewöhnliche Menschen"
+
+msgctxt "#30244"
+msgid "Science"
+msgstr "Wissenschaft"
+
+msgctxt "#30245"
+msgid "Nature"
+msgstr "Natur"
+
+msgctxt "#30246"
+msgid "Technology"
+msgstr "Technik"
+
+msgctxt "#30247"
+msgid "Medicine"
+msgstr "Medizin"
+
+msgctxt "#30248"
+msgid "Foreign Countries"
+msgstr "Ausland"
+
+msgctxt "#30249"
+msgid "Social And Spiritual Sciences"
+msgstr "Sozial- und Geisteswissenschaften"
+
+msgctxt "#30250"
+msgid "Further Education"
+msgstr "Aus- und Weiterbildung"
+
+msgctxt "#30251"
+msgid "Languages"
+msgstr "Sprachen"
+
+msgctxt "#30260"
+msgid "Hobbies"
+msgstr "Hobbies"
+
+msgctxt "#30261"
+msgid "Travel"
+msgstr "Reisen"
+
+msgctxt "#30262"
+msgid "Handicraft"
+msgstr "Handarbeit"
+
+msgctxt "#30263"
+msgid "Motoring"
+msgstr "Motorsport"
+
+msgctxt "#30264"
+msgid "Fitness And Health"
+msgstr "Fitness und Gesundheit"
+
+msgctxt "#30265"
+msgid "Cooking"
+msgstr "Kochen"
+
+msgctxt "#30266"
+msgid "Shopping"
+msgstr "Shopping"
+
+msgctxt "#30267"
+msgid "Gardening"
+msgstr "Gärtnern"
+
+msgctxt "#30300"
+msgid "TV Shows"
+msgstr "Serien"
