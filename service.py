@@ -1,8 +1,13 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import os
 import re
 import sys
+# Hack to avoid encoding errors
+#reload(sys)
+#sys.setdefaultencoding('utf8')
+
 import time
 from datetime import datetime, tzinfo, timedelta
 from dateutil import tz
@@ -25,6 +30,7 @@ __setting__ = __addon__.getSetting
 __addon_id__ = __addon__.getAddonInfo('id')
 __localize__ = __addon__.getLocalizedString
 
+CurrConvRec = {}
 
 time_fmt = '%Y-%m-%d %H:%M:%S'
 
@@ -259,47 +265,50 @@ def get_vdr_recinfo(recdir, extended=False):
         return rec
 
     try:
-        f = open(infofile, 'r')
-        for line in f.readlines():
-            if line[:2] == 'T ':
-                title = line[2:].rstrip('\n')
-            if line[:2] == 'S ':
-                subtitle = line[2:].rstrip('\n')
-                str_subtitle = ' ' + subtitle
-            if line[:2] == 'C ':
-                channel =  line[2:].split(' ', 1)[1].rstrip('\n')
-                str_channel =  ', TV (' + channel + ')'
-            if line[:2] == 'E ':
-                estart = int(line[2:].split(' ')[1])
-                length = int(line[2:].split(' ')[2])
-                #start = time.strftime(time_fmt, time.localtime(estart))
-                #end = time.strftime(time_fmt, time.localtime(estart + length))
+        #f = open(infofile, 'r')
+        with open(infofile, 'r') as f:
+        #f = codecs.open(infofile, 'r', encoding='utf8')
+        #with codecs.open(infofile, 'r', encoding='utf8') as f:
+            for line in f.readlines():
+                if line[:2] == 'T ':
+                    title = line[2:].rstrip('\n')
+                if line[:2] == 'S ':
+                    subtitle = line[2:].rstrip('\n')
+                    str_subtitle = ' ' + subtitle
+                if line[:2] == 'C ':
+                    channel =  line[2:].split(' ', 1)[1].rstrip('\n')
+                    str_channel =  ', TV (' + channel + ')'
+                if line[:2] == 'E ':
+                    estart = int(line[2:].split(' ')[1])
+                    length = int(line[2:].split(' ')[2])
+                    #start = time.strftime(time_fmt, time.localtime(estart))
+                    #end = time.strftime(time_fmt, time.localtime(estart + length))
 
-                start = time.strftime(time_fmt, time.gmtime(estart))
-                end = time.strftime(time_fmt, time.gmtime(estart + length))
-                start = utc_to_local(start, time_fmt)
-                end = utc_to_local(end, time_fmt)
+                    start = time.strftime(time_fmt, time.gmtime(estart))
+                    end = time.strftime(time_fmt, time.gmtime(estart + length))
+                    start = utc_to_local(start, time_fmt)
+                    end = utc_to_local(end, time_fmt)
 
-                str_start = ', ' + time.strftime('%Y%m%d_%H%M%S', time.gmtime(estart))
+                    str_start = ', ' + time.strftime('%Y%m%d_%H%M%S', time.gmtime(estart))
 
-            if extended:
-                if line[:2] == 'D ':
-                    descr = line[2:].rstrip('\n')
+                if extended:
+                    if line[:2] == 'D ':
+                        descr = line[2:].rstrip('\n')
 
-                    match_season = re.search(r'.*([0-9]+). Staffel.*', descr)
-                    if not match_season:
-                        match_season = re.search(r'.*[sS]eason ([0-9]+).*', descr)
-                    if match_season:
-                        season = int(match_season.group(1))
+                        match_season = re.search(r'.*([0-9]+). Staffel.*', descr)
+                        if not match_season:
+                            match_season = re.search(r'.*[sS]eason ([0-9]+).*', descr)
+                        if match_season:
+                            season = int(match_season.group(1))
 
-                    match_episode = re.search(r'.*Folge ([0-9]+).*', descr)
-                    if not match_episode:
-                        match_episode = re.search(r'.*[eE]pisode ([0-9]+).*', descr)
-                    if match_episode:
-                        episode = int(match_episode.group(1))
-                if line[:2] == 'G ':
-                    genre = line[2:].split()
-        f.close()
+                        match_episode = re.search(r'.*Folge ([0-9]+).*', descr)
+                        if not match_episode:
+                            match_episode = re.search(r'.*[eE]pisode ([0-9]+).*', descr)
+                        if match_episode:
+                            episode = int(match_episode.group(1))
+                    if line[:2] == 'G ':
+                        genre = line[2:].split()
+        #f.close()
 
     except (IOError, OSError):
         return rec
@@ -518,6 +527,20 @@ def get_recs(topdir, expand=False, sort=True):
     return recs
 
 
+def is_currently_converted(rec):
+    xbmc.log(msg='[{}]  Currently converted recording title: ---, title to compare:{}'.format(__addon_id__, os.path.realpath(rec['path'])), level=xbmc.LOGNOTICE)
+
+    if not CurrConvRec:
+        return False
+
+    xbmc.log(msg='[{}]  Currently converted recording title: {}'.format(__addon_id__, os.path.realpath(CurrConvRec['path'])), level=xbmc.LOGNOTICE)
+
+    if os.path.realpath(CurrConvRec['path']) == os.path.realpath(rec['path']):
+        return True
+    else:
+        return False
+
+
 def is_active_recording(rec, timers):
     if not rec or not timers:
         return False
@@ -572,7 +595,7 @@ def convert(rec, dest, delsource='False'):
             destdir = os.path.join(destdir, genre_name)
 
     if create_title or group_shows:
-        destdir = os.path.join(destdir, rec['recording']['title'])
+        destdir = os.path.join(destdir, rec['recording']['title'].decode('utf-8'))
 
     try:
         if not os.path.exists(destdir):
@@ -584,13 +607,13 @@ def convert(rec, dest, delsource='False'):
     if add_episode and rec['recording']['episode'] > 0:
         suffix = suffix + ' ' + format(rec['recording']['season']) + 'x' + format(rec['recording']['episode'], '02d')
     if rec['recording']['subtitle']:
-        suffix = suffix + ' - ' + rec['recording']['subtitle']
+        suffix = suffix + ' - ' + rec['recording']['subtitle'].decode('utf-8')
     if add_channel and rec['recording']['channel']:
-        suffix = suffix + '_' + rec['recording']['channel']
+        suffix = suffix + '_' + rec['recording']['channel'].decode('utf-8')
     if add_starttime and rec['recording']['start']:
         suffix = suffix + '_' + rec['recording']['start']
 
-    recname = rec['recording']['title'] + suffix
+    recname = rec['recording']['title'].decode('utf-8') + suffix
 
     if os.access(recdir, os.W_OK):
         vdrfilename = os.path.join(recdir, recname + '.vdr')
@@ -600,7 +623,9 @@ def convert(rec, dest, delsource='False'):
 
     if os.path.exists(outfilename) and not os.path.exists(vdrfilename):
         # either skip if file exists:
-        xbmc.log(msg='[{}]  Output file \'{}\' already exists. Abort.'.format(__addon_id__, os.path.basename(outfilename)), level=xbmc.LOGNOTICE)
+        if os.path.islink(rec['path']):
+            os.unlink(rec['path'])
+        xbmc.log(msg='[{}]  Output file \'{}\' already exists. Skip.'.format(__addon_id__, os.path.basename(outfilename)), level=xbmc.LOGNOTICE)
         return
         # or always replace:
         #os.remove(outfilename)
@@ -610,6 +635,7 @@ def convert(rec, dest, delsource='False'):
 
     try:
         xbmc.log(msg='[{}] Archiving thread started. Archiving \'{}\' ...'.format(__addon_id__, recdir), level=xbmc.LOGNOTICE)
+        CurrConvRec = rec
 
         if os.path.exists(vdrfilename):
             os.remove(vdrfilename)
@@ -620,30 +646,26 @@ def convert(rec, dest, delsource='False'):
         tsfiles.sort()
 
         try:
-            tmpfile = open(vdrfilename, 'wb')
+            with open(vdrfilename, 'wb') as tmpfile:
+                for file in tsfiles:
+                    xbmc.log(msg='[{}] Merging file \'{}\' into temporary file \'{}\'.'.format(__addon_id__, file, os.path.basename(vdrfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
+
+                    fpath = os.path.join(recdir, file)
+                    with open(fpath, 'rb') as infile:
+                        while True:
+                            bytes = infile.read(readsize)
+                            if not bytes:
+                                break
+                            tmpfile.write(bytes)
         except:
-            xbmc.log(msg='[{}] Error creating temporary file \'{}\'.'.format(__addon_id__, vdrfilename), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Error writing temporary file \'{}\'.'.format(__addon_id__, vdrfilename), level=xbmc.LOGNOTICE)
             return
 
-        for file in tsfiles:
-            xbmc.log(msg='[{}] Merging file \'{}\' into temporary file \'{}\'.'.format(__addon_id__, file, os.path.basename(vdrfilename)), level=xbmc.LOGNOTICE)
-
-            fpath = os.path.join(recdir, file)
-            #infile = open(fpath, 'rb')
-            with open(fpath, 'rb') as infile:
-                while True:
-                    bytes = infile.read(readsize)
-                    if not bytes:
-                        break
-                    tmpfile.write(bytes)
-            #infile.close()
-        tmpfile.close()
-
-        xbmc.log(msg='[{}] Start conversion to output file \'{}\' ...'.format(__addon_id__, os.path.basename(outfilename)), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Start conversion to output file \'{}\' ...'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
         try:
             subprocess.check_call(['ffmpeg', '-v', '10', '-i', vdrfilename, '-vcodec', 'libx264', '-acodec', 'copy', outfilename], preexec_fn=lambda: os.nice(19))
         except:
-            xbmc.log(msg='[{}] Error creating output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename)), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Error writing output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
             return
         if os.path.exists(outfilename):
             xbmc.log(msg='[{}] Conversion completed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
@@ -656,7 +678,7 @@ def convert(rec, dest, delsource='False'):
         if os.path.islink(rec['path']):
             os.unlink(rec['path'])
 
-        if delsource and os.access(recdir, os.W_OK): 
+        if delsource and os.access(recdir, os.W_OK):
             try:
                 for file in os.listdir(recdir):
                     os.remove(os.path.join(recdir, file))
@@ -673,6 +695,7 @@ def convert(rec, dest, delsource='False'):
     finally:
         xbmc.log(msg='[{}] Archiving thread completed with error: {}.'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
         lock.release()
+        CurrConvRec = {}
         return
 
 
