@@ -30,8 +30,6 @@ __setting__ = __addon__.getSetting
 __addon_id__ = __addon__.getAddonInfo('id')
 __localize__ = __addon__.getLocalizedString
 
-CurrConvRec = {}
-
 time_fmt = '%Y-%m-%d %H:%M:%S'
 
 genres = {
@@ -527,20 +525,6 @@ def get_recs(topdir, expand=False, sort=True):
     return recs
 
 
-def is_currently_converted(rec):
-    xbmc.log(msg='[{}]  Currently converted recording title: ---, title to compare:{}'.format(__addon_id__, os.path.realpath(rec['path'])), level=xbmc.LOGNOTICE)
-
-    if not CurrConvRec:
-        return False
-
-    xbmc.log(msg='[{}]  Currently converted recording title: {}'.format(__addon_id__, os.path.realpath(CurrConvRec['path'])), level=xbmc.LOGNOTICE)
-
-    if os.path.realpath(CurrConvRec['path']) == os.path.realpath(rec['path']):
-        return True
-    else:
-        return False
-
-
 def is_active_recording(rec, timers):
     if not rec or not timers:
         return False
@@ -635,7 +619,6 @@ def convert(rec, dest, delsource='False'):
 
     try:
         xbmc.log(msg='[{}] Archiving thread started. Archiving \'{}\' ...'.format(__addon_id__, recdir), level=xbmc.LOGNOTICE)
-        CurrConvRec = rec
 
         if os.path.exists(vdrfilename):
             os.remove(vdrfilename)
@@ -695,7 +678,6 @@ def convert(rec, dest, delsource='False'):
     finally:
         xbmc.log(msg='[{}] Archiving thread completed with error: {}.'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
         lock.release()
-        CurrConvRec = {}
         return
 
 
