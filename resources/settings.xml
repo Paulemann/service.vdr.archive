@@ -4,8 +4,10 @@
         <setting label="30001" type="folder" id="recdir" default="/home/kodi/Aufnahmen" />
         <setting label="30002" type="folder" id="scandir" default="/home/kodi/tmp" />
         <setting label="30003" type="folder" id="destdir" default="/home/kodi/Videos" />
+        <setting type="sep"/>
         <setting label="30004" type="bool" id="delsource" default="false" />
         <setting label="30005" type="bool" id="addnew" default="false" />
+        <setting type="sep"/>
         <setting label="30006" type="number" id="pvrport" default="34890" />
         <setting label="30007" type="number" id="sleep" default="300" />
     </category>
@@ -13,8 +15,11 @@
         <setting label="30011" type="bool" id="addepisode" default="false" />
         <setting label="30012" type="bool" id="addchannel" default="true" />
         <setting label="30013" type="bool" id="addstarttime" default="true" />
+        <setting type="sep"/>
         <setting label="30014" type="bool" id="createtitle" default="false" />
         <setting label="30015" type="bool" id="creategenre" default="false" />
         <setting label="30016" type="bool" id="groupshows" default="false" />
+        <setting type="sep"/>
+        <setting label="30017" type="enum" id="recsort" lvalues="30018|30019|30020|30021" default="0" />
     </category>
 </settings>

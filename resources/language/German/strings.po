@@ -89,15 +89,35 @@ msgctxt "#30016"
 msgid "Group TV shows in a separate directory"
 msgstr "TV-Serien in eigenem Verzeichnis gruppieren"
 
+msgctxt "#30017"
+msgid "Sort list of recordings"
+msgstr "Sortierung der Aufnahmenliste"
+
+msgctxt "#30018"
+msgid "By date (ascending)"
+msgstr "Nach Datum (aufsteigend)"
+
+msgctxt "#30019"
+msgid "By date (descending)"
+msgstr "Nach Datum (absteigend)"
+
 msgctxt "#30020"
+msgid "By title (ascending)"
+msgstr "Nach Titel (aufsteigend)"
+
+msgctxt "#30021"
+msgid "By title (descending)"
+msgstr "Nach Titel (absteigend)"
+
+msgctxt "#30050"
 msgid "Select recordings to archive"
 msgstr "Aufnahmen zur Archivierung auswählen"
 
-msgctxt "#30021"
+msgctxt "#30051"
 msgid "OK"
 msgstr "OK"
 
-msgctxt "#30022"
+msgctxt "#30052"
 msgid "Cancel"
 msgstr "Abbruch"
 

@@ -214,6 +214,12 @@ def mixed_decoder(unicode_error):
 
 codecs.register_error('mixed', mixed_decoder)
 
+def to_unicode_or_bust(obj, encoding='utf-8'):
+    if isinstance(obj, basestring):
+        if not isinstance(obj, unicode):
+            obj = unicode(obj, encoding)
+    return
+
 
 def json_request(kodi_request, host):
     PORT   =    8080
@@ -264,9 +270,9 @@ def get_vdr_recinfo(recdir, extended=False):
 
     try:
         #f = open(infofile, 'r')
-        with open(infofile, 'r') as f:
+        #with open(infofile, 'r') as f:
         #f = codecs.open(infofile, 'r', encoding='utf8')
-        #with codecs.open(infofile, 'r', encoding='utf8') as f:
+        with codecs.open(infofile, 'r', encoding='utf8') as f:
             for line in f.readlines():
                 if line[:2] == 'T ':
                     title = line[2:].rstrip('\n')
@@ -471,7 +477,7 @@ def get_timers():
             for i in xrange(len(list)):
                 #start = utc_to_local(list[i]['starttime'], time_fmt)
                 #end = utc_to_local(list[i]['endtime'], time_fmt)
-                timer = {'id':list[i]['timerid'], 'title':list[i]['title'].encode('utf-8'), 'channel':get_vdr_channel(list[i]['channelid']), 'start':utc_to_local(list[i]['starttime'], time_fmt), 'end':utc_to_local(list[i]['endtime'], time_fmt), 'state':list[i]['state']}
+                timer = {'id':list[i]['timerid'], 'title':list[i]['title'], 'channel':get_vdr_channel(list[i]['channelid']), 'start':utc_to_local(list[i]['starttime'], time_fmt), 'end':utc_to_local(list[i]['endtime'], time_fmt), 'state':list[i]['state']}
                 timers.append(timer)
     except KeyError:
         pass
@@ -479,7 +485,7 @@ def get_timers():
     return timers
 
 
-def get_recs(topdir, expand=False, sort=True):
+def get_recs(topdir, expand=False, sort=None):
     GET_RECS = {
         'jsonrpc': '2.0',
         'method': 'PVR.GetRecordings',
@@ -506,8 +512,8 @@ def get_recs(topdir, expand=False, sort=True):
                 for i in xrange(len(list)):
                     start = utc_to_local(list[i]['starttime'], time_fmt)
                     end = utc_to_local(list[i]['endtime'], time_fmt)
-                    title = list[i]['title'].encode('utf-8')
-                    channel = list[i]['channel'].encode('utf-8')
+                    title = list[i]['title']
+                    channel = list[i]['channel']
                     for rec in recs:
                         if title in rec['recording']['title'] and channel in rec['recording']['channel'] and start in rec['recording']['start']:
                             file = urllib2.unquote(list[i]['file'].encode('utf-8'))
@@ -516,11 +522,19 @@ def get_recs(topdir, expand=False, sort=True):
         except KeyError:
             pass
 
-    if sort:
-        # first sort by date
-        recs = sorted(recs, key=lambda k: k['recording']['start'])
-        # then sort by title
-        recs = sorted(recs, key=lambda k: k['recording']['title'])
+    if sort is not None:
+        if sort == 0:
+            # sort by date (ascending)
+            recs = sorted(recs, key=lambda k: k['recording']['start'])
+        if sort == 1:
+            # sort by date (descending)
+            recs = sorted(recs, key=lambda k: k['recording']['start'], reverse=True)
+        if sort == 2:
+            # sort by title (case-insensitive, ascending)
+            recs = sorted(recs, key=lambda k: k['recording']['title'].lower())
+        if sort == 3:
+            # sort by title (case-insensitive, descending)
+            recs = sorted(recs, key=lambda k: k['recording']['title'].lower(), reverse=True)
 
     return recs
 
@@ -562,8 +576,9 @@ def is_active_recording(rec, timers):
 def convert(rec, dest, delsource='False'):
     readsize = 1024
     suffix = ''
+    success = False
 
-    recdir = os.path.realpath(rec['path'])
+    recdir = unicode(os.path.realpath(rec['path']), encoding='utf-8')
     if not os.path.isdir(recdir):
         return
 
@@ -579,37 +594,38 @@ def convert(rec, dest, delsource='False'):
             destdir = os.path.join(destdir, genre_name)
 
     if create_title or group_shows:
-        destdir = os.path.join(destdir, rec['recording']['title'].decode('utf-8'))
+        destdir = os.path.join(destdir, rec['recording']['title'])
 
     try:
         if not os.path.exists(destdir):
             os.makedirs(destdir, 0775)
     except:
-        xbmc.log(msg='[{}] Error creating destination directory \'{}\'. Abort.'.format(__addon_id__, destdir), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Error creating destination directory \'{}\'. Abort.'.format(__addon_id__, destdir.encode('utf-8')), level=xbmc.LOGNOTICE)
         return
 
     if add_episode and rec['recording']['episode'] > 0:
         suffix = suffix + ' ' + format(rec['recording']['season']) + 'x' + format(rec['recording']['episode'], '02d')
     if rec['recording']['subtitle']:
-        suffix = suffix + ' - ' + rec['recording']['subtitle'].decode('utf-8')
+        suffix = suffix + ' - ' + rec['recording']['subtitle']
     if add_channel and rec['recording']['channel']:
-        suffix = suffix + '_' + rec['recording']['channel'].decode('utf-8')
+        suffix = suffix + '_' + rec['recording']['channel']
     if add_starttime and rec['recording']['start']:
         suffix = suffix + '_' + rec['recording']['start']
 
-    recname = rec['recording']['title'].decode('utf-8') + suffix
+    recname = rec['recording']['title'] + suffix
 
     if os.access(recdir, os.W_OK):
         vdrfilename = os.path.join(recdir, recname + '.vdr')
     else:
         vdrfilename = os.path.join(destdir, recname + '.vdr')
+
     outfilename = os.path.join(destdir, recname + '.mp4')
 
     if os.path.exists(outfilename) and not os.path.exists(vdrfilename):
         # either skip if file exists:
         if os.path.islink(rec['path']):
             os.unlink(rec['path'])
-        xbmc.log(msg='[{}]  Output file \'{}\' already exists. Skip.'.format(__addon_id__, os.path.basename(outfilename)), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Output file \'{}\' already exists. Skip.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
         return
         # or always replace:
         #os.remove(outfilename)
@@ -618,31 +634,36 @@ def convert(rec, dest, delsource='False'):
         return
 
     try:
-        xbmc.log(msg='[{}] Archiving thread started. Archiving \'{}\' ...'.format(__addon_id__, recdir), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Archiving thread started. Archiving \'{}\' ...'.format(__addon_id__, recdir.encode('utf-8')), level=xbmc.LOGNOTICE)
+
+        tsfiles = [file for file in os.listdir(recdir) if file.endswith('.ts')]
+        tsfiles.sort()
+        ts_num = len(tsfiles)
 
         if os.path.exists(vdrfilename):
             os.remove(vdrfilename)
             if os.path.exists(outfilename):
                 os.remove(outfilename)
 
-        tsfiles = [file for file in os.listdir(recdir) if file.endswith('.ts')]
-        tsfiles.sort()
+        if ts_num == 1:
+            os.symlink(os.path.join(recdir, tsfiles[0]), vdrfilename)
+        else:
+            try:
+                with open(vdrfilename, 'wb') as tmpfile:
+                    for file in tsfiles:
+                        xbmc.log(msg='[{}] Merging file \'{}\' into temporary file \'{}\'.'.format(__addon_id__, file, os.path.basename(vdrfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
 
-        try:
-            with open(vdrfilename, 'wb') as tmpfile:
-                for file in tsfiles:
-                    xbmc.log(msg='[{}] Merging file \'{}\' into temporary file \'{}\'.'.format(__addon_id__, file, os.path.basename(vdrfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
-
-                    fpath = os.path.join(recdir, file)
-                    with open(fpath, 'rb') as infile:
-                        while True:
-                            bytes = infile.read(readsize)
-                            if not bytes:
-                                break
-                            tmpfile.write(bytes)
-        except:
-            xbmc.log(msg='[{}] Error writing temporary file \'{}\'.'.format(__addon_id__, vdrfilename), level=xbmc.LOGNOTICE)
-            return
+                        fpath = os.path.join(recdir, file)
+                        with open(fpath, 'rb') as infile:
+                            while True:
+                                bytes = infile.read(readsize)
+                                if not bytes:
+                                    break
+                                tmpfile.write(bytes)
+            except:
+                xbmc.log(msg='[{}] Error writing temporary file \'{}\'.'.format(__addon_id__, vdrfilename.encode('utf-8')), level=xbmc.LOGNOTICE)
+                return
+        #endif ts_num = 1
 
         xbmc.log(msg='[{}] Start conversion to output file \'{}\' ...'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
         try:
@@ -650,6 +671,9 @@ def convert(rec, dest, delsource='False'):
         except:
             xbmc.log(msg='[{}] Error writing output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
             return
+
+        success = True
+
         if os.path.exists(outfilename):
             xbmc.log(msg='[{}] Conversion completed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
         else:
@@ -675,8 +699,15 @@ def convert(rec, dest, delsource='False'):
             except OSError:
                 xbmc.log(msg='[{}] Delete source: Permissions denied.'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
+    except:
+        xbmc.log(msg='[{}] Error encountered while archiving.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+        return
+
     finally:
-        xbmc.log(msg='[{}] Archiving thread completed with error: {}.'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+        if success and not sys.exc_info()[1]:
+            xbmc.log(msg='[{}] Archiving thread completed without error.'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+        else:
+            xbmc.log(msg='[{}] Archiving thread failed with error {}'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
         lock.release()
         return
 
@@ -692,7 +723,7 @@ if __name__ == '__main__':
 
     while not monitor.abortRequested():
         vdr_reclist = monitor_source(vdr_dir, addnew=add_new)
-        to_archive = get_recs(scan_dir, expand=True, sort=False)
+        to_archive = get_recs(scan_dir, expand=True)
         vdr_timers = get_timers()
 
         for rec in to_archive:

@@ -15,6 +15,7 @@ from service import get_recs, get_timers, is_active_recording, get_vdr_dir, get_
 
 
 __addon__ = xbmcaddon.Addon()
+__setting__ = __addon__.getSetting
 __addon_id__ = __addon__.getAddonInfo('id')
 __addon_path__ = __addon__.getAddonInfo('path')
 __check_icon__ = os.path.join(__addon_path__, 'check.png') # Don't decode _path to utf-8!!!
@@ -65,9 +66,9 @@ class MultiChoiceDialog(pyxbmct.AddonDialogWindow):
     def set_controls(self):
         self.listing = pyxbmct.List(_imageWidth=15)
         self.placeControl(self.listing, 0, 0, rowspan=9, columnspan=10)
-        self.ok_button = pyxbmct.Button(__localize__(30021))
+        self.ok_button = pyxbmct.Button(__localize__(30051))
         self.placeControl(self.ok_button, 9, 3, columnspan=2)
-        self.cancel_button = pyxbmct.Button(__localize__(30022))
+        self.cancel_button = pyxbmct.Button(__localize__(30052))
         self.placeControl(self.cancel_button, 9, 5, columnspan=2)
 
     def connect_controls(self):
@@ -106,9 +107,14 @@ class MultiChoiceDialog(pyxbmct.AddonDialogWindow):
 
 
 if __name__ == '__main__':
+    try:
+        rec_sort = int(__setting__('recsort'))
+    except:
+        rec_sort = 0
+
     vdr_dir = get_vdr_dir()
     scan_dir = get_scan_dir()
-    recs = get_recs(vdr_dir)
+    recs = get_recs(vdr_dir, sort=rec_sort)
     timers = get_timers()
 
     items = []
@@ -116,13 +122,14 @@ if __name__ == '__main__':
 
     for index, rec in enumerate(recs):
         prefix = '*' if is_active_recording(rec, timers) else ' '
-        item = '{}{} {}: {} ({})'.format(prefix, convert_date(rec['recording']['start'], time_fmt, '%d.%m.%Y %H:%M'), rec['recording']['channel'], rec['recording']['title'], rec['recording']['subtitle'])
+        #item = '{}{} {}: {} ({})'.format(prefix, convert_date(rec['recording']['start'], time_fmt, '%d.%m.%Y %H:%M'), rec['recording']['channel'].encode('utf-8'), rec['recording']['title'].encode('utf-8'), rec['recording']['subtitle'].encode('utf-8'))
+        item = '{}{}: \"{} ({})\" - {}'.format(prefix, convert_date(rec['recording']['start'], time_fmt, '%d.%m.%Y %H:%M'), rec['recording']['title'].encode('utf-8'), rec['recording']['subtitle'].encode('utf-8'), rec['recording']['channel'].encode('utf-8'))
         items.append(item)
 
         if os.path.islink(os.path.join(scan_dir, os.path.basename(rec['path']))):
             pre_select.append(index)
 
-    dialog = MultiChoiceDialog(__localize__(30020), items, pre_select)
+    dialog = MultiChoiceDialog(__localize__(30050), items, pre_select)
     dialog.doModal()
 
     if dialog.selected is not None:
@@ -140,4 +147,3 @@ if __name__ == '__main__':
                 continue
 
     del dialog
- 
