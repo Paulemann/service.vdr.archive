@@ -255,7 +255,7 @@ def get_vdr_recinfo(recdir, extended=False):
     title = subtitle = channel = start = end = ''
     str_subtitle = str_channel = str_start = ''
     estart = length = 0
-    genre = 0
+    genre = ['00']
     episode = 0
     season = 1
 
