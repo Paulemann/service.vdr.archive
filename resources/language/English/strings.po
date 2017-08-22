@@ -109,6 +109,10 @@ msgctxt "#30021"
 msgid "By title (descending)"
 msgstr ""
 
+msgctxt "#30022"
+msgid "Retain all audio streams"
+msgstr ""
+
 msgctxt "#30050"
 msgid "Select recordings to archive"
 msgstr ""

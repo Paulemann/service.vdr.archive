@@ -122,7 +122,7 @@ class MyMonitor( xbmc.Monitor ):
 
 
 def load_addon_settings():
-    global sleep_time, add_episode, add_channel, add_starttime, add_new, create_title, create_genre, del_source, vdr_dir, vdr_port, scan_dir, dest_dir, group_shows
+    global sleep_time, add_episode, add_channel, add_starttime, add_new, create_title, create_genre, del_source, vdr_dir, vdr_port, scan_dir, dest_dir, group_shows, retain_audio
 
     try:
         sleep_time = int(__setting__('sleep'))
@@ -152,12 +152,12 @@ def load_addon_settings():
     try:
         add_channel = True if __setting__('addchannel').lower() == 'true' else False
     except:
-        add_channel = False
+        add_channel = True
 
     try:
         add_starttime = True if __setting__('addstarttime').lower() == 'true' else False
     except:
-        add_starttime = False
+        add_starttime = True
 
     try:
         create_title = True if __setting__('createtitle').lower() == 'true' else False
@@ -183,6 +183,11 @@ def load_addon_settings():
         scan_dir = __setting__('scandir')
     except:
         scan_dir = '/home/kodi/tmp'
+
+    try:
+        retain_audio = True if __setting__('retainaudio').lower() == 'true' else False
+    except:
+        retain_audio = True
 
     try:
         dest_dir = __setting__('destdir')
@@ -667,7 +672,11 @@ def convert(rec, dest, delsource='False'):
 
         xbmc.log(msg='[{}] Start conversion to output file \'{}\' ...'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
         try:
-            subprocess.check_call(['ffmpeg', '-v', '10', '-i', vdrfilename, '-vcodec', 'libx264', '-acodec', 'copy', outfilename], preexec_fn=lambda: os.nice(19))
+            # Added deinterlace option via '-filter:v yadif'
+            if retain_audio:
+                subprocess.check_call(['ffmpeg', '-v', '10', '-i', vdrfilename, '-map', '0', '-c', 'copy', '-c:v', 'libx264', '-filter:v', 'yadif', outfilename], preexec_fn=lambda: os.nice(19))
+            else:
+                subprocess.check_call(['ffmpeg', '-v', '10', '-i', vdrfilename, '-vcodec', 'libx264', '-filter:v', 'yadif', '-acodec', 'copy', outfilename], preexec_fn=lambda: os.nice(19))
         except:
             xbmc.log(msg='[{}] Error writing output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
             return

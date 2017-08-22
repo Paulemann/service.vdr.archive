@@ -21,5 +21,7 @@
         <setting label="30016" type="bool" id="groupshows" default="false" />
         <setting type="sep"/>
         <setting label="30017" type="enum" id="recsort" lvalues="30018|30019|30020|30021" default="0" />
+        <setting type="sep"/>
+        <setting label="30022" type="bool" id="retainaudio" default="true" />
     </category>
 </settings>

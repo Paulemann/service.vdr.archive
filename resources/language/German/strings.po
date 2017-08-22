@@ -27,7 +27,7 @@ msgstr "Mit Hilfe dieses Addons können lokal gespeicherte VDR Aufnahmen für di
 
 msgctxt "Addon Disclaimer"
 msgid "Use at your own risk"
-msgstr ""
+msgstr "Benutzung auf eigene Gefahr"
 
 msgctxt "#30000"
 msgid "General"
@@ -108,6 +108,10 @@ msgstr "Nach Titel (aufsteigend)"
 msgctxt "#30021"
 msgid "By title (descending)"
 msgstr "Nach Titel (absteigend)"
+
+msgctxt "#30022"
+msgid "Retain all audio streams"
+msgstr "Alle Audio-Streams verwenden"
 
 msgctxt "#30050"
 msgid "Select recordings to archive"
