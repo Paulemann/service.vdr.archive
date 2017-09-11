@@ -690,9 +690,10 @@ def convert(rec, dest, delsource='False'):
             return
 
         os.chmod(outfilename, 0664)
-        os.remove(vdrfilename)
-        if os.path.islink(rec['path']):
-            os.unlink(rec['path'])
+        # Moved to finally section for clean up:
+        #os.remove(vdrfilename)
+        #if os.path.islink(rec['path']):
+        #    os.unlink(rec['path'])
 
         if delsource and os.access(recdir, os.W_OK):
             try:
@@ -717,6 +718,12 @@ def convert(rec, dest, delsource='False'):
             xbmc.log(msg='[{}] Archiving thread completed without error.'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
         else:
             xbmc.log(msg='[{}] Archiving thread failed with error {}'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+
+        if os.path.exists(vdrfilename):
+            os.remove(vdrfilename)
+        if os.path.islink(rec['path']):
+            os.unlink(rec['path'])
+
         lock.release()
         return
 

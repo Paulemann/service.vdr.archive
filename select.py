@@ -51,7 +51,6 @@ class MultiChoiceDialog(pyxbmct.AddonDialogWindow):
         self.setGeometry(800, 600, 10, 10)
         self.selected = selected or []
         self.set_controls()
-        self.connect_controls()
         self.listing.addItems(items or [])
         if (self.listing.size() > 0):
             for index in xrange(self.listing.size()):
@@ -61,15 +60,17 @@ class MultiChoiceDialog(pyxbmct.AddonDialogWindow):
                 else:
                     self.listing.getListItem(index).setIconImage(__unchecked_icon__)
                     self.listing.getListItem(index).setLabel2("unchecked")
+        else:
+            self.listing.addItems([__localize__(30053)])
+        self.place_controls()
+        self.connect_controls()
         self.set_navigation()
 
     def set_controls(self):
         self.listing = pyxbmct.List(_imageWidth=15)
         self.placeControl(self.listing, 0, 0, rowspan=9, columnspan=10)
         self.ok_button = pyxbmct.Button(__localize__(30051))
-        self.placeControl(self.ok_button, 9, 3, columnspan=2)
         self.cancel_button = pyxbmct.Button(__localize__(30052))
-        self.placeControl(self.cancel_button, 9, 5, columnspan=2)
 
     def connect_controls(self):
         self.connect(self.listing, self.check_uncheck)
@@ -77,12 +78,19 @@ class MultiChoiceDialog(pyxbmct.AddonDialogWindow):
         self.connect(self.cancel_button, self.close)
         self.connect(pyxbmct.ACTION_NAV_BACK, self.close)
 
+    def place_controls(self):
+        if (self.listing.getListItem(0).getLabel2()):
+            self.placeControl(self.ok_button, 9, 3, columnspan=2)
+            self.placeControl(self.cancel_button, 9, 5, columnspan=2)
+        else:
+            self.placeControl(self.cancel_button, 9, 4, columnspan=2)
+
     def set_navigation(self):
-        self.listing.controlUp(self.ok_button)
-        self.listing.controlDown(self.ok_button)
-        self.ok_button.setNavigation(self.listing, self.listing, self.cancel_button, self.cancel_button)
-        self.cancel_button.setNavigation(self.listing, self.listing, self.ok_button, self.ok_button)
-        if self.listing.size():
+        if (self.listing.getListItem(0).getLabel2()):
+            self.listing.controlUp(self.ok_button)
+            self.listing.controlDown(self.ok_button)
+            self.ok_button.setNavigation(self.listing, self.listing, self.cancel_button, self.cancel_button)
+            self.cancel_button.setNavigation(self.listing, self.listing, self.ok_button, self.ok_button)
             self.setFocus(self.listing)
         else:
             self.setFocus(self.cancel_button)
@@ -114,6 +122,13 @@ if __name__ == '__main__':
 
     vdr_dir = get_vdr_dir()
     scan_dir = get_scan_dir()
+    if not os.path.isdir(scan_dir):
+        try:
+            os.makedirs(scan_dir, 0755)
+        except OSError:
+            xbmc.log(msg='[{}] Error: The temporary folder does not exist.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+            raise
+
     recs = get_recs(vdr_dir, sort=rec_sort)
     timers = get_timers()
 

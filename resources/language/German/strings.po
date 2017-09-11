@@ -17,18 +17,6 @@ msgstr ""
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-msgctxt "Addon Summary"
-msgid "Convert VDR Recordings into mp4 video files."
-msgstr "Umwandlung von VDR Aufnahmen in mp4-Videodateien."
-
-msgctxt "Addon Description"
-msgid "This addon lets you select locally stored VDR recordings for conversion to mp4 video files and archiving at the configured destination. The conversion is handled by a service which runs in the background."
-msgstr "Mit Hilfe dieses Addons können lokal gespeicherte VDR Aufnahmen für die Umwandlung in mp4-Videodateien ausgewählt und am konfigurierten Speicherort archiviert werden. Die Umwandlung erfolgt durch einen Dienst im Hintergrund."
-
-msgctxt "Addon Disclaimer"
-msgid "Use at your own risk"
-msgstr "Benutzung auf eigene Gefahr"
-
 msgctxt "#30000"
 msgid "General"
 msgstr "Allgemein"
@@ -124,6 +112,10 @@ msgstr "OK"
 msgctxt "#30052"
 msgid "Cancel"
 msgstr "Abbruch"
+
+msgctxt "#30053"
+msgid "Currently no recordings are available"
+msgstr "Zurzeit sind keine Aufnahmen verfügbar"
 
 msgctxt "#30100"
 msgid "Miscellaneous"
