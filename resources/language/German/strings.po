@@ -98,8 +98,40 @@ msgid "By title (descending)"
 msgstr "Nach Titel (absteigend)"
 
 msgctxt "#30022"
-msgid "Retain all audio streams"
-msgstr "Alle Audio-Streams verwenden"
+msgid "Process multipple audio streams"
+msgstr "Mehrere Audio-Streams verarbeiten"
+
+msgctxt "#30023"
+msgid "Select languages"
+msgstr "Sprachauswahl"
+
+msgctxt "#30024"
+msgid "Optimize MP2 audio"
+msgstr "MP2-Audio optimieren"
+
+msgctxt "#30025"
+msgid "Deinterlace"
+msgstr "Deinterlace"
+
+msgctxt "#30026"
+msgid "Always replace existing file"
+msgstr "Vorhandene Zieldatei überschreiben""
+
+msgctxt "#30027"
+msgid "Notify on success"
+msgstr "Nachricht nach erfolgreicher Umwandlung"
+
+msgctxt "#30028"
+msgid "Notify on failure"
+msgstr "Nachricht nach gescheiterter Umwandlung"
+
+msgctxt "#30040"
+msgid "Archiving completed"
+msgstr "Archivierung abgeschlossen"
+
+msgctxt "#30041"
+msgid "Archiving failed"
+msgstr "Archivierung fehlgeschlagen"
 
 msgctxt "#30050"
 msgid "Select recordings to archive"

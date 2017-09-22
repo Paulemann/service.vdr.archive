@@ -4,9 +4,6 @@
 import os
 import re
 import sys
-# Hack to avoid encoding errors
-#reload(sys)
-#sys.setdefaultencoding('utf8')
 
 import time
 from datetime import datetime, tzinfo, timedelta
@@ -121,8 +118,19 @@ class MyMonitor( xbmc.Monitor ):
         load_addon_settings()
 
 
+def read_set(string):
+    ret = set()
+    for element in string.split(','):
+        try:
+            item = int(element)
+        except ValueError:
+            item = element.strip()
+        ret.add(item)
+    return ret
+
+
 def load_addon_settings():
-    global sleep_time, add_episode, add_channel, add_starttime, add_new, create_title, create_genre, del_source, vdr_dir, vdr_port, scan_dir, dest_dir, group_shows, retain_audio
+    global sleep_time, add_episode, add_channel, add_starttime, add_new, create_title, create_genre, del_source, vdr_dir, vdr_port, scan_dir, dest_dir, group_shows, retain_audio, recode_audio, deinterlace_video, filter_lang, output_overwrite, notification_success, notification_fail
 
     try:
         sleep_time = int(__setting__('sleep'))
@@ -193,6 +201,36 @@ def load_addon_settings():
         dest_dir = __setting__('destdir')
     except:
         dest_dir = '/home/kodi/Videos'
+
+    try:
+        deinterlace_video = True if __setting__('deinterlace').lower() == 'true' else False
+    except:
+        deinterlace_video = True
+
+    try:
+        filter_lang = read_set(__setting__('filter'))
+    except:
+        filter_lang = {'deu', 'eng'}
+
+    try:
+        recode_audio = True if __setting__('recode').lower() == 'true' else False
+    except:
+        recode_audio = False
+
+    try:
+        output_overwrite = True if __setting__('overwrite').lower() == 'true' else False
+    except:
+        output_overwrite = True
+
+    try:
+        notification_success = True if __setting__('successnote').lower() == 'true' else False
+    except:
+        notification_success = True
+
+    try:
+        notification_fail = True if __setting__('failurenote').lower() == 'true' else False
+    except:
+        notification_fail = True
 
     if __name__ == '__main__':
         xbmc.log(msg='[{}] Settings loaded.'.format(__addon_id__), level=xbmc.LOGNOTICE)
@@ -274,9 +312,6 @@ def get_vdr_recinfo(recdir, extended=False):
         return rec
 
     try:
-        #f = open(infofile, 'r')
-        #with open(infofile, 'r') as f:
-        #f = codecs.open(infofile, 'r', encoding='utf8')
         with codecs.open(infofile, 'r', encoding='utf8') as f:
             for line in f.readlines():
                 if line[:2] == 'T ':
@@ -317,7 +352,6 @@ def get_vdr_recinfo(recdir, extended=False):
                             episode = int(match_episode.group(1))
                     if line[:2] == 'G ':
                         genre = line[2:].split()
-        #f.close()
 
     except (IOError, OSError):
         return rec
@@ -570,130 +604,189 @@ def is_active_recording(rec, timers):
             timer_channel = timer['channel']
             if timer_title != rec_title or timer_channel != rec_channel:
                 continue
-            #if  timer_start > now or timer_end < now:
-            #    continue
             if  timer_start <= rec_start and timer_end >= rec_end:
                 return True
 
     return False
 
 
+def is_tool(name):
+    try:
+        devnull = open(os.devnull)
+        subprocess.Popen([name], stdout=devnull, stderr=devnull).communicate()
+    except OSError as e:
+        if e.errno == os.errno.ENOENT:
+            return False
+    return True
+
+
 def convert(rec, dest, delsource='False'):
     readsize = 1024
     suffix = ''
-    success = False
+    destdir = dest
+    infilename = ''
+    map_cmd = ''
+
+    if not lock.acquire(False):
+        return
 
     recdir = unicode(os.path.realpath(rec['path']), encoding='utf-8')
     if not os.path.isdir(recdir):
         return
 
-    destdir = dest
-
-    main_genre_name = genres['F0' if group_shows and rec['recording']['episode'] > 0 else (rec['recording']['genre'][0][:-1]  + '0')]
-    genre_name = genres[rec['recording']['genre'][0]]
-    if create_genre or (group_shows and rec['recording']['episode'] > 0):
-        if main_genre_name:
-            destdir = os.path.join(destdir, main_genre_name)
-    if create_genre and ((group_shows and rec['recording']['episode'] > 0) or rec['recording']['genre'][0][-1] != '0'):
-        if genre_name:
-            destdir = os.path.join(destdir, genre_name)
-
-    if create_title or group_shows:
-        destdir = os.path.join(destdir, rec['recording']['title'])
-
     try:
-        if not os.path.exists(destdir):
-            os.makedirs(destdir, 0775)
-    except:
-        xbmc.log(msg='[{}] Error creating destination directory \'{}\'. Abort.'.format(__addon_id__, destdir.encode('utf-8')), level=xbmc.LOGNOTICE)
-        return
+        xbmc.log(msg='[{}] Archiving VDR recording in \'{}\' ...'.format(__addon_id__, recdir.encode('utf-8')), level=xbmc.LOGNOTICE)
 
-    if add_episode and rec['recording']['episode'] > 0:
-        suffix = suffix + ' ' + format(rec['recording']['season']) + 'x' + format(rec['recording']['episode'], '02d')
-    if rec['recording']['subtitle']:
-        suffix = suffix + ' - ' + rec['recording']['subtitle']
-    if add_channel and rec['recording']['channel']:
-        suffix = suffix + '_' + rec['recording']['channel']
-    if add_starttime and rec['recording']['start']:
-        suffix = suffix + '_' + rec['recording']['start']
+        main_genre_name = genres['F0' if group_shows and rec['recording']['episode'] > 0 else (rec['recording']['genre'][0][:-1]  + '0')]
+        genre_name = genres[rec['recording']['genre'][0]]
+        if create_genre or (group_shows and rec['recording']['episode'] > 0):
+            if main_genre_name:
+                destdir = os.path.join(destdir, main_genre_name)
+        if create_genre and ((group_shows and rec['recording']['episode'] > 0) or rec['recording']['genre'][0][-1] != '0'):
+            if genre_name:
+                destdir = os.path.join(destdir, genre_name)
 
-    recname = rec['recording']['title'] + suffix
+        if create_title or group_shows:
+            destdir = os.path.join(destdir, rec['recording']['title'])
 
-    if os.access(recdir, os.W_OK):
-        vdrfilename = os.path.join(recdir, recname + '.vdr')
-    else:
-        vdrfilename = os.path.join(destdir, recname + '.vdr')
+        try:
+            if not os.path.exists(destdir):
+                xbmc.log(msg='[{}] Creating destination directory \'{}\'.'.format(__addon_id__, destdir.encode('utf-8')), level=xbmc.LOGNOTICE)
+                os.makedirs(destdir, 0775)
+        except:
+            xbmc.log(msg='[{}] Error creating destination directory \'{}\'.'.format(__addon_id__, destdir.encode('utf-8')), level=xbmc.LOGNOTICE)
+            return
 
-    outfilename = os.path.join(destdir, recname + '.mp4')
+        if add_episode and rec['recording']['episode'] > 0:
+            suffix = suffix + ' ' + format(rec['recording']['season']) + 'x' + format(rec['recording']['episode'], '02d')
+        if rec['recording']['subtitle']:
+            suffix = suffix + ' - ' + rec['recording']['subtitle']
+        if add_channel and rec['recording']['channel']:
+            suffix = suffix + '_' + rec['recording']['channel']
+        if add_starttime and rec['recording']['start']:
+            suffix = suffix + '_' + rec['recording']['start']
 
-    if os.path.exists(outfilename) and not os.path.exists(vdrfilename):
-        # either skip if file exists:
-        if os.path.islink(rec['path']):
-            os.unlink(rec['path'])
-        xbmc.log(msg='[{}] Output file \'{}\' already exists. Skip.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
-        return
-        # or always replace:
-        #os.remove(outfilename)
+        recname = rec['recording']['title'] + suffix
 
-    if not lock.acquire(False):
-        return
+        outfilename = os.path.join(destdir, recname + '.mp4')
 
-    try:
-        xbmc.log(msg='[{}] Archiving thread started. Archiving \'{}\' ...'.format(__addon_id__, recdir.encode('utf-8')), level=xbmc.LOGNOTICE)
+        if os.path.exists(outfilename):
+            if output_overwrite:
+                xbmc.log(msg='[{}] Output file \'{}\' already exists. Remove.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
+                os.remove(outfilename)
+            else:
+                xbmc.log(msg='[{}] Output file \'{}\' already exists. Abort.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
+                return
 
-        tsfiles = [file for file in os.listdir(recdir) if file.endswith('.ts')]
+        tsfiles = [os.path.join(recdir, file) for file in os.listdir(recdir) if file.endswith('.ts')]
         tsfiles.sort()
         ts_num = len(tsfiles)
 
-        if os.path.exists(vdrfilename):
-            os.remove(vdrfilename)
+        if ts_num > 1:
+            infilename = 'concat:'
+
+        for index, file in enumerate(tsfiles):
+            infilename += file
+            if ts_num > 1  and index < (ts_num - 1):
+               infilename += '|'
+
+        cmd_pre = ['ffmpeg', '-v', '10', '-i', infilename, '-c', 'copy']
+        cmd_post = []
+        cmd_recode = []
+
+        audio_idx = -1
+
+        xbmc.log(msg='[{}] Analyzing input file ...'.format(__addon_id__), level=xbmc.LOGNOTICE)
+        try:
+            output = subprocess.check_output(['ffprobe', '-i', os.path.join(recdir, '00001.ts'), '-hide_banner'], stderr=subprocess.STDOUT, universal_newlines=True)
+        except subprocess.CalledProcessError as exc:
+            xbmc.log(msg='[{}] Error checking input file: {}'.format(__addon_id__, exc.ouput), level=xbmc.LOGNOTICE)
+        else:
+            for line in output.split('\n'):
+                items = line.split()
+                if len(items) > 0 and items[0] == 'Stream':
+                    s = items[1]
+                    index = s[s.find(":")+1:s.find("[")]
+                    type = items[2][:-1]
+                    codec = items[3]
+                    if type in ['Audio', 'Subtitle']:
+                        lang = s[s.find("(")+1:s.find(")")]
+                        xbmc.log(msg='[{}] Found Stream {} of type {}({}) using codec {}'.format(__addon_id__, index, type, lang, codec), level=xbmc.LOGNOTICE)
+                    else:
+                        xbmc.log(msg='[{}] Found Stream {} of type {} using codec {}'.format(__addon_id__, index, type, codec), level=xbmc.LOGNOTICE)
+
+                    if type in ['Audio', 'Video','Subtitle'] and retain_audio:
+                        if type in ['Audio', 'Subtitle'] and len(filter_lang) > 0:
+                            if lang in filter_lang:
+                                cmd_pre.extend(['-map', '0:' + index])
+                        else:
+                            cmd_pre.extend(['-map', '0:' + index])
+                        if  type =='Audio':
+                            audio_idx += 1
+                            if lang:
+                                cmd_recode.extend(['-metadata:s:a:' + str(audio_idx), 'language=' + lang])
+
+                            il = len(items)
+                            # Sample rate in Hz
+                            audio_sr = int(items[il - 6])
+                            # channel layout: mono, stereo
+                            audio_cl = items[il - 4][:-1]
+                            # sample format
+                            audio_sf = items[il - 3][:-1]
+                            # bit rate in kb/s
+                            audio_br = int(items[il - 2])
+
+                            xbmc.log(msg='[{}] - Sample Rate: {} Hz, Channel Layout: {}, Sample Format: {}, Bit Rate: {} kb/s'.format(__addon_id__, audio_sr, audio_cl, audio_sf, audio_br), level=xbmc.LOGNOTICE)
+
+                            if recode_audio:
+                                if codec in ['mp2'] and audio_cl == 'stereo':
+                                    cmd_recode.extend(['-c:a:' + str(audio_idx), 'libfdk_aac', '-ac:a:' + str(audio_idx), '2', '-b:a:' + str(audio_idx)])
+                                    if audio_br < 160:
+                                        cmd_recode.append('96k')
+                                    elif audio_br < 192:
+                                        cmd_recode.append('128k')
+                                    else:
+                                        cmd_recode.append('192k')
+
+                    if type == 'Video':
+                        if codec != 'h264' or deinterlace_video:
+                            cmd_post.extend(['-c:v', 'libx264'])
+                        if deinterlace_video:
+                            cmd_post.extend(['-filter:v', 'yadif'])
+
+        cmd_post.append(outfilename)
+
+        cmd = cmd_pre + cmd_recode + cmd_post
+
+        cmd_str = ''
+        for c in cmd:
+            cmd_str += c + ' '
+        # remove last blank
+        cmd_str = cmd_str[:-1]
+
+        xbmc.log(msg='[{}] Starting conversion to output file \'{}\' ...'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Calling \'{}\''.format(__addon_id__, cmd_str.encode('utf-8')), level=xbmc.LOGDEBUG)
+        try:
+            subprocess.check_call(cmd, preexec_fn=lambda: os.nice(19))
+        except OSError as exc:
+            #if exc.errno == os.errno.ENOENT:
+            xbmc.log(msg='[{}] Error. Looks like ffmpeg isn\'t installed.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
+            return
+        except subprocess.CalledProcessError as exc:
+            xbmc.log(msg='[{}] Error writing ouput file \'{}\': {}'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8'), exc.ouput), level=xbmc.LOGNOTICE)
+        except:
+            xbmc.log(msg='[{}] Unspecified Error writing output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
+            # In case the output file has alreaby been created, remove it: 
             if os.path.exists(outfilename):
                 os.remove(outfilename)
-
-        if ts_num == 1:
-            os.symlink(os.path.join(recdir, tsfiles[0]), vdrfilename)
-        else:
-            try:
-                with open(vdrfilename, 'wb') as tmpfile:
-                    for file in tsfiles:
-                        xbmc.log(msg='[{}] Merging file \'{}\' into temporary file \'{}\'.'.format(__addon_id__, file, os.path.basename(vdrfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
-
-                        fpath = os.path.join(recdir, file)
-                        with open(fpath, 'rb') as infile:
-                            while True:
-                                bytes = infile.read(readsize)
-                                if not bytes:
-                                    break
-                                tmpfile.write(bytes)
-            except:
-                xbmc.log(msg='[{}] Error writing temporary file \'{}\'.'.format(__addon_id__, vdrfilename.encode('utf-8')), level=xbmc.LOGNOTICE)
-                return
-        #endif ts_num = 1
-
-        xbmc.log(msg='[{}] Start conversion to output file \'{}\' ...'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
-        try:
-            # Added deinterlace option via '-filter:v yadif'
-            if retain_audio:
-                subprocess.check_call(['ffmpeg', '-v', '10', '-i', vdrfilename, '-map', '0', '-c', 'copy', '-c:v', 'libx264', '-filter:v', 'yadif', outfilename], preexec_fn=lambda: os.nice(19))
-            else:
-                subprocess.check_call(['ffmpeg', '-v', '10', '-i', vdrfilename, '-vcodec', 'libx264', '-filter:v', 'yadif', '-acodec', 'copy', outfilename], preexec_fn=lambda: os.nice(19))
-        except:
-            xbmc.log(msg='[{}] Error writing output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
             return
-
-        success = True
 
         if os.path.exists(outfilename):
-            xbmc.log(msg='[{}] Conversion completed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Output file \'{}\' succesfully created.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
+            os.chmod(outfilename, 0664)
         else:
-            xbmc.log(msg='[{}] Conversion failed for unknown reason.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Couldn\*t create output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
             return
-
-        os.chmod(outfilename, 0664)
-        # Moved to finally section for clean up:
-        #os.remove(vdrfilename)
-        #if os.path.islink(rec['path']):
-        #    os.unlink(rec['path'])
 
         if delsource and os.access(recdir, os.W_OK):
             try:
@@ -709,18 +802,23 @@ def convert(rec, dest, delsource='False'):
             except OSError:
                 xbmc.log(msg='[{}] Delete source: Permissions denied.'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
-    except:
-        xbmc.log(msg='[{}] Error encountered while archiving.'.format(__addon_id__), level=xbmc.LOGNOTICE)
-        return
-
     finally:
-        if success and not sys.exc_info()[1]:
-            xbmc.log(msg='[{}] Archiving thread completed without error.'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+        if os.path.exists(outfilename) and not sys.exc_info()[1]:
+            xbmc.log(msg='[{}] Archiving completed.'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+            if notification_success:
+                notification = 'Notification({},{})'.format(__localize__(30040), recname.encode('utf-8'))
+                xbmc.executebuiltin(notification)
+        elif sys.exc_info()[1]:
+            xbmc.log(msg='[{}] Archiving failed with error {}'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+            if notification_fail:
+                notification = 'Notification({},{})'.format(__localize__(30041), recname.encode('utf-8'))
+                xbmc.executebuiltin(notification)
         else:
-            xbmc.log(msg='[{}] Archiving thread failed with error {}'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Archiving failed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+            if notification_fail:
+                notification = 'Notification({},{})'.format(__localize__(30041), recname.encode('utf-8'))
+                xbmc.executebuiltin(notification)
 
-        if os.path.exists(vdrfilename):
-            os.remove(vdrfilename)
         if os.path.islink(rec['path']):
             os.unlink(rec['path'])
 
@@ -736,6 +834,7 @@ if __name__ == '__main__':
     load_addon_settings()
 
     vdr_reclist = set()
+    os.nice(19)
 
     while not monitor.abortRequested():
         vdr_reclist = monitor_source(vdr_dir, addnew=add_new)
