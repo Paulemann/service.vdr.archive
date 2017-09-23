@@ -728,7 +728,7 @@ def convert(rec, dest, delsource='False'):
                             #    cmd_recode.extend(['-metadata:s:a:' + str(audio_idx), 'language=' + lang])
 
                             il = len(items)
-                            # aample rate in Hz
+                            # sample rate in Hz
                             audio_sr = int(items[il - 6])
                             # channel layout: mono, stereo
                             audio_cl = items[il - 4][:-1]
