@@ -743,11 +743,11 @@ def convert(rec, dest, delsource='False'):
                                 if codec in ['mp2'] and audio_cl == 'stereo':
                                     cmd_recode.extend(['-c:a:' + str(audio_idx), 'aac', '-ac:a:' + str(audio_idx), '2', '-b:a:' + str(audio_idx)])
                                     if audio_br < 160:
-                                        cmd_recode.append('98k')
-                                    elif audio_br < 192:
-                                        cmd_recode.append('128k')
+                                        cmd_recode.append('96k')
+                                    elif audio_br > 192:
+                                        cmd_recode.append('192k')
                                     else:
-                                        cmd_recode.append('196k')
+                                        cmd_recode.append('128k')
                             else:
                                 cmd_recode.extend(['-c:a:' + str(audio_idx), 'copy'])
                     # assume only one video stream
