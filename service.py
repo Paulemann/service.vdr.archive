@@ -690,9 +690,9 @@ def convert(rec, dest, delsource='False'):
             if ts_num > 1  and index < (ts_num - 1):
                infilename += '|'
 
-        cmd_pre = ['ffmpeg', '-v', '10', '-i', infilename, '-c', 'copy']
-        cmd_post = []
+        cmd_pre = ['ffmpeg', '-v', '10', '-i', infilename]
         cmd_recode = []
+        cmd_post = []
 
         audio_idx = -1
 
@@ -700,7 +700,8 @@ def convert(rec, dest, delsource='False'):
         try:
             output = subprocess.check_output(['ffprobe', '-i', os.path.join(recdir, '00001.ts'), '-hide_banner'], stderr=subprocess.STDOUT, universal_newlines=True)
         except subprocess.CalledProcessError as exc:
-            xbmc.log(msg='[{}] Error checking input file: {}'.format(__addon_id__, exc.ouput), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Error analyzing input file: {}. Proceed with defaults.'.format(__addon_id__, exc.ouput), level=xbmc.LOGNOTICE)
+            cmd_pre.extend(['-c', 'copy'])
         else:
             for line in output.split('\n'):
                 items = line.split()
@@ -723,11 +724,11 @@ def convert(rec, dest, delsource='False'):
                             cmd_pre.extend(['-map', '0:' + index])
                         if  type =='Audio':
                             audio_idx += 1
-                            if lang:
-                                cmd_recode.extend(['-metadata:s:a:' + str(audio_idx), 'language=' + lang])
+                            #if lang:
+                            #    cmd_recode.extend(['-metadata:s:a:' + str(audio_idx), 'language=' + lang])
 
                             il = len(items)
-                            # Sample rate in Hz
+                            # aample rate in Hz
                             audio_sr = int(items[il - 6])
                             # channel layout: mono, stereo
                             audio_cl = items[il - 4][:-1]
@@ -740,20 +741,28 @@ def convert(rec, dest, delsource='False'):
 
                             if recode_audio:
                                 if codec in ['mp2'] and audio_cl == 'stereo':
-                                    cmd_recode.extend(['-c:a:' + str(audio_idx), 'libfdk_aac', '-ac:a:' + str(audio_idx), '2', '-b:a:' + str(audio_idx)])
+                                    cmd_recode.extend(['-c:a:' + str(audio_idx), 'aac', '-ac:a:' + str(audio_idx), '2', '-b:a:' + str(audio_idx)])
                                     if audio_br < 160:
-                                        cmd_recode.append('96k')
+                                        cmd_recode.append('98k')
                                     elif audio_br < 192:
                                         cmd_recode.append('128k')
                                     else:
-                                        cmd_recode.append('192k')
-
+                                        cmd_recode.append('196k')
+                            else:
+                                cmd_recode.extend(['-c:a:' + str(audio_idx), 'copy'])
+                    # assume only one video stream
                     if type == 'Video':
                         if codec != 'h264' or deinterlace_video:
-                            cmd_post.extend(['-c:v', 'libx264'])
-                        if deinterlace_video:
-                            cmd_post.extend(['-filter:v', 'yadif'])
-
+                            cmd_post = ['-c:v', 'libx264']
+                            if deinterlace_video:
+                                cmd_post.extend(['-filter:v', 'yadif'])
+                        else:
+                            cmd_post = ['-c:v', 'copy']
+            # always copy subtitles
+            cmd_post.extend(['-c:s', 'copy'])
+            # copy default audio stream if retain_audio = False
+            if not retain_audio:
+                cmd_recode = ['-c:a', 'copy']
         cmd_post.append(outfilename)
 
         cmd = cmd_pre + cmd_recode + cmd_post
@@ -768,17 +777,15 @@ def convert(rec, dest, delsource='False'):
         xbmc.log(msg='[{}] Calling \'{}\''.format(__addon_id__, cmd_str.encode('utf-8')), level=xbmc.LOGDEBUG)
         try:
             subprocess.check_call(cmd, preexec_fn=lambda: os.nice(19))
-        except OSError as exc:
-            #if exc.errno == os.errno.ENOENT:
+        except OSError as e:
+            #if e.errno == os.errno.ENOENT:
             xbmc.log(msg='[{}] Error. Looks like ffmpeg isn\'t installed.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
             return
         except subprocess.CalledProcessError as exc:
             xbmc.log(msg='[{}] Error writing ouput file \'{}\': {}'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8'), exc.ouput), level=xbmc.LOGNOTICE)
+            return
         except:
             xbmc.log(msg='[{}] Unspecified Error writing output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
-            # In case the output file has alreaby been created, remove it: 
-            if os.path.exists(outfilename):
-                os.remove(outfilename)
             return
 
         if os.path.exists(outfilename):
@@ -808,16 +815,17 @@ def convert(rec, dest, delsource='False'):
             if notification_success:
                 notification = 'Notification({},{})'.format(__localize__(30040), recname.encode('utf-8'))
                 xbmc.executebuiltin(notification)
-        elif sys.exc_info()[1]:
-            xbmc.log(msg='[{}] Archiving failed with error {}'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
-            if notification_fail:
-                notification = 'Notification({},{})'.format(__localize__(30041), recname.encode('utf-8'))
-                xbmc.executebuiltin(notification)
         else:
-            xbmc.log(msg='[{}] Archiving failed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+            if sys.exc_info()[1]:
+                xbmc.log(msg='[{}] Archiving failed with error {}'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+            else:
+                xbmc.log(msg='[{}] Archiving failed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
             if notification_fail:
                 notification = 'Notification({},{})'.format(__localize__(30041), recname.encode('utf-8'))
                 xbmc.executebuiltin(notification)
+            # in case of failure if the output file has been created, remove it:
+            if os.path.exists(outfilename):
+                os.remove(outfilename)
 
         if os.path.islink(rec['path']):
             os.unlink(rec['path'])
