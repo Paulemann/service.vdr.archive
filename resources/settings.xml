@@ -19,16 +19,15 @@
         <setting label="30014" type="bool" id="createtitle" default="false" />
         <setting label="30015" type="bool" id="creategenre" default="false" />
         <setting label="30016" type="bool" id="groupshows" default="false" />
-        <setting type="sep"/>
-        <setting label="30017" type="enum" id="recsort" lvalues="30018|30019|30020|30021" default="0" />
+        <setting label="30026" type="bool" id="overwrite" default="true" />
         <setting type="sep"/>
         <setting label="30022" type="bool" id="retainaudio" default="true" />
         <setting label="30023" type="text" subsetting="true" enable="eq(-1,true)" id="filter" default="deu, eng" />
         <setting label="30024" type="bool" subsetting="true" enable="eq(-2,true)" id="recode" default="false" />
-        <setting type="sep"/>
         <setting label="30025" type="bool" id="deinterlace" default="true" />
-        <setting label="30026" type="bool" id="overwrite" default="true" />
+        <setting label="30029" type="bool" id="forcesd" default="false" />
         <setting type="sep"/>
+        <setting label="30017" type="enum" id="recsort" lvalues="30018|30019|30020|30021" default="0" />
         <setting label="30027" type="bool" id="successnote" default="true" />
         <setting label="30028" type="bool" id="failurenote" default="true" />
     </category>

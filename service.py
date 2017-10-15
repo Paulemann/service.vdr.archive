@@ -130,7 +130,7 @@ def read_set(string):
 
 
 def load_addon_settings():
-    global sleep_time, add_episode, add_channel, add_starttime, add_new, create_title, create_genre, del_source, vdr_dir, vdr_port, scan_dir, dest_dir, group_shows, retain_audio, recode_audio, deinterlace_video, filter_lang, output_overwrite, notification_success, notification_fail
+    global sleep_time, add_episode, add_channel, add_starttime, add_new, create_title, create_genre, del_source, vdr_dir, vdr_port, scan_dir, dest_dir, group_shows, retain_audio, recode_audio, deinterlace_video, force_sd, filter_lang, output_overwrite, notification_success, notification_fail
 
     try:
         sleep_time = int(__setting__('sleep'))
@@ -196,6 +196,11 @@ def load_addon_settings():
         retain_audio = True if __setting__('retainaudio').lower() == 'true' else False
     except:
         retain_audio = True
+
+    try:
+        force_sd = True if __setting__('forcesd').lower() == 'true' else False
+    except:
+        force_sd = False
 
     try:
         dest_dir = __setting__('destdir')
@@ -611,6 +616,8 @@ def is_active_recording(rec, timers):
 
 
 def is_tool(name):
+# check if a tool with name 'name' exists
+
     try:
         devnull = open(os.devnull)
         subprocess.Popen([name], stdout=devnull, stderr=devnull).communicate()
@@ -679,16 +686,40 @@ def convert(rec, dest, delsource='False'):
                 return
 
         tsfiles = [os.path.join(recdir, file) for file in os.listdir(recdir) if file.endswith('.ts')]
-        tsfiles.sort()
-        ts_num = len(tsfiles)
 
-        if ts_num > 1:
-            infilename = 'concat:'
+        if len(tsfiles) > 1:
+            tsfiles.sort()
 
-        for index, file in enumerate(tsfiles):
-            infilename += file
-            if ts_num > 1  and index < (ts_num - 1):
-               infilename += '|'
+            rec_start = int(time.mktime(time.strptime(rec['recording']['start'], time_fmt)))
+            rec_end = int(time.mktime(time.strptime(rec['recording']['end'], time_fmt)))
+
+            for file in tsfiles:
+                # Get Modification date of ts file and cut seconds
+                #   date = int(os.path.getmtime(file)/10)*10
+                #   mtime = time.strftime(time_fmt, time.localtime(date))
+                # Add only files with mtime > rec['recording']['start'] and mtime > rec['recording']['end']
+                file_mtime = int(os.path.getmtime(file)/10)*10
+                if file_mtime > rec_start:
+                    infilename = infilename + file + '|'
+                if file_mtime > rec_end:
+                    break
+
+            if infilename[-1] == '|':
+                infilename = infilename[:-1]
+
+            if infilename.count('|') > 0:
+                probefilename = infilename.split('|')[0]
+                infilename = 'concat:' + infilename
+            else:
+                probefilename = infilename
+
+        elif len(tsfiles) == 1:
+            infilename = tsfiles[0]
+            probefilename = infilename
+
+        if not infilename:
+            xbmc.log(msg='[{}] No matching input file(s) found in source directory. Abort.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+            return
 
         cmd_pre = ['ffmpeg', '-v', '10', '-i', infilename]
         cmd_recode = []
@@ -697,50 +728,45 @@ def convert(rec, dest, delsource='False'):
         audio_idx = -1
 
         xbmc.log(msg='[{}] Analyzing input file ...'.format(__addon_id__), level=xbmc.LOGNOTICE)
+
         try:
-            output = subprocess.check_output(['ffprobe', '-i', os.path.join(recdir, '00001.ts'), '-hide_banner'], stderr=subprocess.STDOUT, universal_newlines=True)
+            data = subprocess.check_output(['ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', probefilename,])
+            output = json.loads(data.decode('utf-8'))
         except subprocess.CalledProcessError as exc:
             xbmc.log(msg='[{}] Error analyzing input file: {}. Proceed with defaults.'.format(__addon_id__, exc.ouput), level=xbmc.LOGNOTICE)
             cmd_pre.extend(['-c', 'copy'])
         else:
-            for line in output.split('\n'):
-                items = line.split()
-                if len(items) > 0 and items[0] == 'Stream':
-                    s = items[1]
-                    index = s[s.find(":")+1:s.find("[")]
-                    type = items[2][:-1]
-                    codec = items[3]
-                    if type in ['Audio', 'Subtitle']:
-                        lang = s[s.find("(")+1:s.find(")")]
+            if output.has_key('streams'):
+                for stream in output['streams']:
+                    type = stream['codec_type']
+                    codec = stream['codec_name']
+                    index = int(stream['index'])
+
+                    if type in ['audio', 'subtitle']:
+                        lang = stream['tags']['language']
                         xbmc.log(msg='[{}] Found Stream {} of type {}({}) using codec {}'.format(__addon_id__, index, type, lang, codec), level=xbmc.LOGNOTICE)
                     else:
                         xbmc.log(msg='[{}] Found Stream {} of type {} using codec {}'.format(__addon_id__, index, type, codec), level=xbmc.LOGNOTICE)
 
-                    if type in ['Audio', 'Video','Subtitle'] and retain_audio:
-                        if type in ['Audio', 'Subtitle'] and len(filter_lang) > 0:
+                    if type in ['audio', 'video', 'subtitle'] and retain_audio:
+                        if type in ['audio', 'subtitle'] and len(filter_lang) > 0:
                             if lang in filter_lang:
-                                cmd_pre.extend(['-map', '0:' + index])
+                                cmd_pre.extend(['-map', '0:' + str(index)])
                         else:
-                            cmd_pre.extend(['-map', '0:' + index])
-                        if  type =='Audio':
+                            cmd_pre.extend(['-map', '0:' + str(index)])
+                        if  type == 'audio':
                             audio_idx += 1
                             #if lang:
                             #    cmd_recode.extend(['-metadata:s:a:' + str(audio_idx), 'language=' + lang])
 
-                            il = len(items)
-                            # sample rate in Hz
-                            audio_sr = int(items[il - 6])
-                            # channel layout: mono, stereo
-                            audio_cl = items[il - 4][:-1]
-                            # sample format
-                            audio_sf = items[il - 3][:-1]
-                            # bit rate in kb/s
-                            audio_br = int(items[il - 2])
+                            audio_sr = int(stream['sample_rate'])
+                            audio_sf = stream['sample_fmt']
+                            audio_cl = stream['channel_layout']
+                            audio_br = int(stream['bit_rate'])/1000
 
                             xbmc.log(msg='[{}] - Sample Rate: {} Hz, Channel Layout: {}, Sample Format: {}, Bit Rate: {} kb/s'.format(__addon_id__, audio_sr, audio_cl, audio_sf, audio_br), level=xbmc.LOGNOTICE)
 
-                            if recode_audio:
-                                if codec in ['mp2'] and audio_cl == 'stereo':
+                            if recode_audio and codec == 'mp2' and audio_cl == 'stereo':
                                     cmd_recode.extend(['-c:a:' + str(audio_idx), 'aac', '-ac:a:' + str(audio_idx), '2', '-b:a:' + str(audio_idx)])
                                     if audio_br < 160:
                                         cmd_recode.append('96k')
@@ -750,19 +776,35 @@ def convert(rec, dest, delsource='False'):
                                         cmd_recode.append('128k')
                             else:
                                 cmd_recode.extend(['-c:a:' + str(audio_idx), 'copy'])
+
                     # assume only one video stream
-                    if type == 'Video':
+                    if type == 'video':
+                        video_wd = int(stream['width'])
+                        video_ht = int(stream['height'])
+                        video_fr = int(eval(stream['avg_frame_rate']))
+
+                        xbmc.log(msg='[{}] - Resolution: {} x {} @ {} fps'.format(__addon_id__, video_wd, video_ht, video_fr), level=xbmc.LOGNOTICE)
+
                         if codec != 'h264' or deinterlace_video:
                             cmd_post = ['-c:v', 'libx264']
                             if deinterlace_video:
                                 cmd_post.extend(['-filter:v', 'yadif'])
                         else:
                             cmd_post = ['-c:v', 'copy']
+
+                        if force_sd and video_wd > 720:
+                            cmd_post.extend(['-vf', 'scale=720:576'])
+
+            else:
+                cmd_pre.extend(['-c', 'copy'])
+
             # always copy subtitles
             cmd_post.extend(['-c:s', 'copy'])
+
             # copy default audio stream if retain_audio = False
             if not retain_audio:
                 cmd_recode = ['-c:a', 'copy']
+
         cmd_post.append(outfilename)
 
         cmd = cmd_pre + cmd_recode + cmd_post

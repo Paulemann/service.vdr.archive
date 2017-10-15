@@ -125,6 +125,10 @@ msgctxt "#30028"
 msgid "Notify on failure"
 msgstr ""
 
+msgctxt "#30029"
+msgid "Convert HD videos to SD format"
+msgstr ""
+
 msgctxt "#30040"
 msgid "Archiving completed"
 msgstr ""

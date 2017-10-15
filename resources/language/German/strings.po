@@ -123,7 +123,11 @@ msgstr "Nachricht nach erfolgreicher Umwandlung"
 
 msgctxt "#30028"
 msgid "Notify on failure"
-msgstr "Nachricht nach gescheiterter Umwandlung"
+msgstr "Nachricht bei gescheiterter Umwandlung"
+
+msgctxt "#30029"
+msgid "Convert HD videos to SD format"
+msgstr "HD-Videos in SD-Format umwandeln"
 
 msgctxt "#30040"
 msgid "Archiving completed"
