@@ -262,26 +262,42 @@ def mixed_decoder(unicode_error):
 
 codecs.register_error('mixed', mixed_decoder)
 
-def to_unicode_or_bust(obj, encoding='utf-8'):
-    if isinstance(obj, basestring):
-        if not isinstance(obj, unicode):
-            obj = unicode(obj, encoding)
-    return
 
+def json_request(method, params, host):
+    # e.g. KodiJRPC_Get("PVR.GetProperties", {"properties": ["recording"]})
 
-def json_request(kodi_request, host):
     PORT   =    8080
     URL    =    'http://' + host + ':' + str(PORT) + '/jsonrpc'
     HEADER =    {'Content-Type': 'application/json'}
 
-    if host == 'localhost':
-        response = xbmc.executeJSONRPC(json.dumps(kodi_request))
-        if response:
-            return json.loads(response.decode('utf-8','mixed'))
+    request = {
+        'jsonrpc': '2.0',
+        'method': method,
+        'id': method}
 
-    request = urllib2.Request(URL, json.dumps(kodi_request), HEADER)
-    with closing(urllib2.urlopen(request)) as response:
-        return json.loads(response.read().decode('utf-8', 'mixed'))
+    if params:
+        request['params'] = params
+
+    if host == 'localhost':
+        try:
+            response = xbmc.executeJSONRPC(json.dumps(request))
+            data = json.loads(response.decode('utf-8','mixed'))
+            if data['id'] == method and data.has_key('result'):
+                return data['result']
+        except:
+            pass
+
+    else:
+        try:
+            reply = urllib2.Request(URL, json.dumps(request), HEADER)
+            with closing(urllib2.urlopen(reply)) as response:
+                data = json.loads(response.read().decode('utf-8', 'mixed'))
+                if data['id'] == method and data.has_key('result'):
+                    return data['result']
+        except:
+            pass
+
+    return False
 
 
 def utc_to_local(t_str, t_fmt):
@@ -370,11 +386,13 @@ def find_clients(port, include_localhost):
     #clients = set()
     clients = []
 
-    netstat = subprocess.check_output(['/bin/netstat', '-t', '-n'], universal_newlines=True)
+    my_env = os.environ.copy()
+    my_env['LC_ALL'] = 'en_EN'
+    netstat = subprocess.check_output(['/bin/netstat', '-t', '-n'], universal_newlines=True, env=my_env)
 
     for line in netstat.split('\n')[2:]:
         items = line.split()
-        if len(items) < 6 or (items[5] != 'VERBUNDEN' and items[5] != 'ESTABLISHED'):
+        if len(items) < 6 or items[5] != 'ESTABLISHED':
             continue
 
         local_addr, local_port = items[3].rsplit(':', 1)
@@ -439,25 +457,6 @@ def get_pid(name):
 
 
 def is_now_playing(rec):
-    GET_PLAYER = {
-        'jsonrpc': '2.0',
-        'method': 'Player.GetActivePlayers',
-        'id': 1
-    }
-
-    GET_ITEM = {
-        'jsonrpc': '2.0',
-        'method': 'Player.GetItem',
-        'params': {
-            'properties': [
-                'title',
-                'file'
-            ],
-            'playerid': 1
-        },
-        'id': 'VideoGetItem'
-    }
-
     if not rec:
         return False
 
@@ -467,13 +466,14 @@ def is_now_playing(rec):
         return False
 
     for host in find_clients(vdr_port, True):
-        pdata = json_request(GET_PLAYER, host)
-        if pdata['result'] and pdata['result'][0]['type'] == 'video' :
-            idata = json_request(GET_ITEM, host)
+        players = json_request('Player.GetActivePlayers', False, host)
+        if players and len(players) > 0 and players[0]['type'] == 'video':
+            playerid = players[0]['playerid']
+            playeritem = json_request('Player.GetItem', {'properties': ['title', 'file'], 'playerid': playerid}, host)
 
             try:
-                if  idata['result']['item']['type'] != 'channel':
-                    file = urllib2.unquote(idata['result']['item']['file'].encode('utf-8'))
+                if playeritem and playeritem['item']['type'] != 'channel':
+                    file = urllib2.unquote(playeritem['item']['file'].encode('utf-8'))
                     if rec_file in file:
                         return True
             except KeyError:
@@ -483,46 +483,28 @@ def is_now_playing(rec):
 
 
 def get_vdr_channel(channelid):
-    GET_CHANNELDETAILS = {
-        'jsonrpc': '2.0',
-        'method': 'PVR.GetChannelDetails',
-        'params': {
-            'channelid': channelid
-            },
-        'id': 1
-    }
     channel = ''
 
     try:
-        data = json_request(GET_CHANNELDETAILS, 'localhost')
-        if data['result'] and data['result']['channeldetails']['channelid'] == channelid:
-            channel = data['result']['channeldetails']['label']
+        pvrdetails = json_request('PVR.GetChannelDetails', {'channelid': channelid}, 'localhost')
+        if pvrdetails and pvrdetails['channeldetails']['channelid'] == channelid:
+            channel = pvrdetails['channeldetails']['label']
     except:
-        return channel
+        pass
 
     return channel
 
 
 def get_timers():
-    GET_TIMERS = {
-        'jsonrpc': '2.0',
-        'method': 'PVR.GetTimers',
-        'params': {
-            'properties': ['title', 'starttime', 'endtime', 'state', 'channelid']
-            },
-        'id': 1
-    }
     timers = []
 
     try:
-        data = json_request(GET_TIMERS, 'localhost')
-        if data['result']:
-            list = data['result']['timers']
-            for i in xrange(len(list)):
-                #start = utc_to_local(list[i]['starttime'], time_fmt)
-                #end = utc_to_local(list[i]['endtime'], time_fmt)
-                timer = {'id':list[i]['timerid'], 'title':list[i]['title'], 'channel':get_vdr_channel(list[i]['channelid']), 'start':utc_to_local(list[i]['starttime'], time_fmt), 'end':utc_to_local(list[i]['endtime'], time_fmt), 'state':list[i]['state']}
-                timers.append(timer)
+        pvrtimers = json_request('PVR.GetTimers', {'properties': ['title', 'starttime', 'endtime', 'state', 'channelid']}, 'localhost')
+        if pvrtimers:
+            for timer in pvrtimers['timers']:
+                t = {'id':timer['timerid'], 'title':timer['title'], 'channel':get_vdr_channel(timer['channelid']), 'start':utc_to_local(timer['starttime'], time_fmt), 'end':utc_to_local(timer['endtime'], time_fmt), 'state':timer['state']}
+                timers.append(t)
+
     except KeyError:
         pass
 
@@ -530,14 +512,6 @@ def get_timers():
 
 
 def get_recs(topdir, expand=False, sort=None):
-    GET_RECS = {
-        'jsonrpc': '2.0',
-        'method': 'PVR.GetRecordings',
-        'params': {
-            'properties': ['title', 'file', 'channel', 'starttime', 'endtime'],
-            },
-        'id': 1
-    }
     recs = []
 
     for path, dirs, files in os.walk(topdir, followlinks=True):
@@ -545,24 +519,19 @@ def get_recs(topdir, expand=False, sort=None):
             if not files:
                 continue
             if 'info' in files and '00001.ts' in files:
-                rec = {'path':path, 'recording':get_vdr_recinfo(path, extended=expand)}
-                recs.append(rec)
+                r = {'path':path, 'recording':get_vdr_recinfo(path, extended=expand)}
+                recs.append(r)
 
     if expand:
         try:
-            data = json_request(GET_RECS, 'localhost')
-            if data['result']:
-                list = data['result']['recordings']
-                for i in xrange(len(list)):
-                    start = utc_to_local(list[i]['starttime'], time_fmt)
-                    end = utc_to_local(list[i]['endtime'], time_fmt)
-                    title = list[i]['title']
-                    channel = list[i]['channel']
+            pvrrecordings = json_request('PVR.GetRecordings',{'properties': ['title', 'file', 'channel', 'starttime', 'endtime'],}, 'localhost')
+            if pvrrecordings:
+                for recording in pvrrecordings['recordings']:
                     for rec in recs:
-                        if title in rec['recording']['title'] and channel in rec['recording']['channel'] and start in rec['recording']['start']:
-                            file = urllib2.unquote(list[i]['file'].encode('utf-8'))
-                            rec['recording']['id'] = list[i]['recordingid']
-                            rec['recording']['file'] = file
+                        if recording['title'] in rec['recording']['title'] and recording['channel'] in rec['recording']['channel'] and utc_to_local(recording['starttime'], time_fmt) in rec['recording']['start']:
+                            rec['recording']['id'] = recording['recordingid']
+                            rec['recording']['file'] = urllib2.unquote(recording['file'].encode('utf-8'))
+
         except KeyError:
             pass
 
@@ -616,7 +585,7 @@ def is_active_recording(rec, timers):
 
 
 def is_tool(name):
-# check if a tool with name 'name' exists
+    # check if a tool with name 'name' exists
 
     try:
         devnull = open(os.devnull)
@@ -722,8 +691,8 @@ def convert(rec, dest, delsource='False'):
             return
 
         cmd_pre = ['ffmpeg', '-v', '10', '-i', infilename]
-        cmd_recode = []
-        cmd_post = []
+        cmd_audio = ['-c:a', 'copy']
+        cmd_video = ['-c:v', 'copy']
 
         audio_idx = -1
 
@@ -734,9 +703,10 @@ def convert(rec, dest, delsource='False'):
             output = json.loads(data.decode('utf-8'))
         except subprocess.CalledProcessError as exc:
             xbmc.log(msg='[{}] Error analyzing input file: {}. Proceed with defaults.'.format(__addon_id__, exc.ouput), level=xbmc.LOGNOTICE)
-            cmd_pre.extend(['-c', 'copy'])
         else:
             if output.has_key('streams'):
+                if retain_audio:
+                    cmd_audio = []
                 for stream in output['streams']:
                     type = stream['codec_type']
                     codec = stream['codec_name']
@@ -745,19 +715,20 @@ def convert(rec, dest, delsource='False'):
                     if type in ['audio', 'subtitle']:
                         lang = stream['tags']['language']
                         xbmc.log(msg='[{}] Found Stream {} of type {}({}) using codec {}'.format(__addon_id__, index, type, lang, codec), level=xbmc.LOGNOTICE)
+                    #elif type == 'video':
                     else:
                         xbmc.log(msg='[{}] Found Stream {} of type {} using codec {}'.format(__addon_id__, index, type, codec), level=xbmc.LOGNOTICE)
 
-                    if type in ['audio', 'video', 'subtitle'] and retain_audio:
-                        if type in ['audio', 'subtitle'] and len(filter_lang) > 0:
+                    if type in ['audio', 'video'] and retain_audio:
+                        if type == 'audio' and len(filter_lang) > 0:
                             if lang in filter_lang:
                                 cmd_pre.extend(['-map', '0:' + str(index)])
+                            else:
+                                continue
                         else:
                             cmd_pre.extend(['-map', '0:' + str(index)])
                         if  type == 'audio':
                             audio_idx += 1
-                            #if lang:
-                            #    cmd_recode.extend(['-metadata:s:a:' + str(audio_idx), 'language=' + lang])
 
                             audio_sr = int(stream['sample_rate'])
                             audio_sf = stream['sample_fmt']
@@ -767,15 +738,15 @@ def convert(rec, dest, delsource='False'):
                             xbmc.log(msg='[{}] - Sample Rate: {} Hz, Channel Layout: {}, Sample Format: {}, Bit Rate: {} kb/s'.format(__addon_id__, audio_sr, audio_cl, audio_sf, audio_br), level=xbmc.LOGNOTICE)
 
                             if recode_audio and codec == 'mp2' and audio_cl == 'stereo':
-                                    cmd_recode.extend(['-c:a:' + str(audio_idx), 'aac', '-ac:a:' + str(audio_idx), '2', '-b:a:' + str(audio_idx)])
+                                    cmd_audio.extend(['-c:a:' + str(audio_idx), 'aac', '-ac:a:' + str(audio_idx), '2', '-b:a:' + str(audio_idx)])
                                     if audio_br < 160:
-                                        cmd_recode.append('96k')
+                                        cmd_audio.append('96k')
                                     elif audio_br > 192:
-                                        cmd_recode.append('192k')
+                                        cmd_audio.append('192k')
                                     else:
-                                        cmd_recode.append('128k')
+                                        cmd_audio.append('128k')
                             else:
-                                cmd_recode.extend(['-c:a:' + str(audio_idx), 'copy'])
+                                cmd_audio.extend(['-c:a:' + str(audio_idx), 'copy'])
 
                     # assume only one video stream
                     if type == 'video':
@@ -786,28 +757,15 @@ def convert(rec, dest, delsource='False'):
                         xbmc.log(msg='[{}] - Resolution: {} x {} @ {} fps'.format(__addon_id__, video_wd, video_ht, video_fr), level=xbmc.LOGNOTICE)
 
                         if codec != 'h264' or deinterlace_video:
-                            cmd_post = ['-c:v', 'libx264']
+                            cmd_video = ['-c:v', 'libx264']
                             if deinterlace_video:
-                                cmd_post.extend(['-filter:v', 'yadif'])
-                        else:
-                            cmd_post = ['-c:v', 'copy']
+                                cmd_video.extend(['-filter:v', 'yadif'])
 
                         if force_sd and video_wd > 720:
-                            cmd_post.extend(['-vf', 'scale=720:576'])
+                            cmd_video.extend(['-vf', 'scale=720:576'])
 
-            else:
-                cmd_pre.extend(['-c', 'copy'])
-
-            # always copy subtitles
-            cmd_post.extend(['-c:s', 'copy'])
-
-            # copy default audio stream if retain_audio = False
-            if not retain_audio:
-                cmd_recode = ['-c:a', 'copy']
-
-        cmd_post.append(outfilename)
-
-        cmd = cmd_pre + cmd_recode + cmd_post
+        cmd = cmd_pre + cmd_audio + cmd_video
+        cmd.append(outfilename)
 
         cmd_str = ''
         for c in cmd:
