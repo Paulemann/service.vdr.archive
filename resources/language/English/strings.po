@@ -1,7 +1,7 @@
 # XBMC Media Center language file
 # Addon Name: VDR Recordings Archiver Service
 # Addon id: service.recordings.archiver
-# Addon version: 0.2
+# Addon version: 2.3
 # Addon Provider: Paulemann
 msgid ""
 msgstr ""

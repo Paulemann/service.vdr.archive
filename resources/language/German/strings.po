@@ -1,7 +1,7 @@
 # XBMC Media Center language file
 # Addon Name: VDR Recodings Archiver Service
 # Addon id: service.recodings.archiver
-# Addon version: 0.2
+# Addon version: 2.3
 # Addon Provider: Paulemann
 msgid ""
 msgstr ""
@@ -115,7 +115,7 @@ msgstr "Deinterlace"
 
 msgctxt "#30026"
 msgid "Always replace existing file"
-msgstr "Vorhandene Zieldatei überschreiben""
+msgstr "Vorhandene Zieldatei überschreiben"
 
 msgctxt "#30027"
 msgid "Notify on success"
