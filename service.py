@@ -263,39 +263,37 @@ def mixed_decoder(unicode_error):
 codecs.register_error('mixed', mixed_decoder)
 
 
-def json_request(method, params, host):
+def json_request(method, params, host, port=8080):
     # e.g. KodiJRPC_Get("PVR.GetProperties", {"properties": ["recording"]})
 
-    PORT   =    8080
-    URL    =    'http://' + host + ':' + str(PORT) + '/jsonrpc'
-    HEADER =    {'Content-Type': 'application/json'}
+    url = 'http://{}:{}/jsonrpc'.format(host, port)
+    header = {'Content-Type': 'application/json'}
 
-    request = {
+    jsondata = {
         'jsonrpc': '2.0',
         'method': method,
         'id': method}
 
     if params:
-        request['params'] = params
+        jsondata['params'] = params
 
-    if host == 'localhost':
-        try:
-            response = xbmc.executeJSONRPC(json.dumps(request))
+    try:
+        if host == 'localhost':
+            response = xbmc.executeJSONRPC(json.dumps(jsondata))
             data = json.loads(response.decode('utf-8','mixed'))
+
             if data['id'] == method and data.has_key('result'):
                 return data['result']
-        except:
-            pass
-
-    else:
-        try:
-            reply = urllib2.Request(URL, json.dumps(request), HEADER)
+        else:
+            request = urllib2.Request(url, json.dumps(jsondata), header)
             with closing(urllib2.urlopen(reply)) as response:
                 data = json.loads(response.read().decode('utf-8', 'mixed'))
+
                 if data['id'] == method and data.has_key('result'):
                     return data['result']
-        except:
-            pass
+
+    except:
+        pass
 
     return False
 
@@ -388,7 +386,7 @@ def find_clients(port, include_localhost):
 
     my_env = os.environ.copy()
     my_env['LC_ALL'] = 'en_EN'
-    netstat = subprocess.check_output(['/bin/netstat', '-t', '-n'], universal_newlines=True, env=my_env)
+    netstat = subprocess.check_output(['netstat', '-t', '-n'], universal_newlines=True, env=my_env)
 
     for line in netstat.split('\n')[2:]:
         items = line.split()
@@ -623,7 +621,8 @@ def convert(rec, dest, delsource='False'):
                 destdir = os.path.join(destdir, genre_name)
 
         if create_title or group_shows:
-            destdir = os.path.join(destdir, rec['recording']['title'])
+            # replace ':' with ' -' to make path windows-friendly
+            destdir = os.path.join(destdir, rec['recording']['title'].replace(':', ' -'))
 
         try:
             if not os.path.exists(destdir):
@@ -642,7 +641,8 @@ def convert(rec, dest, delsource='False'):
         if add_starttime and rec['recording']['start']:
             suffix = suffix + '_' + rec['recording']['start']
 
-        recname = rec['recording']['title'] + suffix
+        # replace ':' with ' -' to make path windows-friendly
+        recname = rec['recording']['title'].replace(':', ' -') + suffix
 
         outfilename = os.path.join(destdir, recname + '.mp4')
 
