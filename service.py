@@ -811,7 +811,7 @@ def convert(rec, dest, delsource='False'):
 
     finally:
         if os.path.exists(outfilename) and not sys.exc_info()[1]:
-            xbmc.log(msg='[{}] Archiving completed.'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Archiving completed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
             if notification_success:
                 notification = 'Notification({},{})'.format(__localize__(30040), recname.encode('utf-8'))
                 xbmc.executebuiltin(notification)
