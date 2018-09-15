@@ -130,7 +130,7 @@ def read_set(string):
 
 
 def load_addon_settings():
-    global sleep_time, add_episode, add_channel, add_starttime, add_new, create_title, create_genre, del_source, vdr_dir, vdr_port, scan_dir, dest_dir, group_shows, retain_audio, recode_audio, deinterlace_video, force_sd, filter_lang, output_overwrite, notification_success, notification_fail
+    global sleep_time, add_episode, add_channel, add_starttime, add_new, create_title, create_genre, del_source, vdr_dir, vdr_port, scan_dir, dest_dir, group_shows, retain_audio, recode_audio, deinterlace_video, force_sd, filter_lang, output_overwrite, notification_success, notification_fail, sys_encoding, dst_encoding
 
     try:
         sleep_time = int(__setting__('sleep'))
@@ -237,6 +237,15 @@ def load_addon_settings():
     except:
         notification_fail = True
 
+    try:
+        use_win_encoding = True if __setting__('winencoding').lower() == 'true' else False
+    except:
+        use_win_encoding = False
+
+    #sys_encoding = locale.getpreferredencoding()
+    sys_encoding = sys.getfilesystemencoding()
+    dst_encoding = 'cp1252' if use_win_encoding else sys_encoding
+
     if __name__ == '__main__':
         xbmc.log(msg='[{}] Settings loaded.'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
@@ -263,7 +272,7 @@ def mixed_decoder(unicode_error):
 codecs.register_error('mixed', mixed_decoder)
 
 
-def json_request(method, params, host, port=8080):
+def json_request(method, params=None, host='localhost', port=8080, username=None, password=None):
     # e.g. KodiJRPC_Get("PVR.GetProperties", {"properties": ["recording"]})
 
     url = 'http://{}:{}/jsonrpc'.format(host, port)
@@ -277,17 +286,21 @@ def json_request(method, params, host, port=8080):
     if params:
         jsondata['params'] = params
 
+    if username and password:
+        base64str = base64.encodestring('{}:{}'.format(username, password))[:-1]
+        header['Authorization'] = 'Basic {}'.format(base64str)
+
     try:
         if host == 'localhost':
             response = xbmc.executeJSONRPC(json.dumps(jsondata))
-            data = json.loads(response.decode('utf-8','mixed'))
+            data = json.loads(response.decode(sys_encoding, 'mixed'))
 
             if data['id'] == method and data.has_key('result'):
                 return data['result']
         else:
             request = urllib2.Request(url, json.dumps(jsondata), header)
             with closing(urllib2.urlopen(reply)) as response:
-                data = json.loads(response.read().decode('utf-8', 'mixed'))
+                data = json.loads(response.read().decode(sys_encoding, 'mixed'))
 
                 if data['id'] == method and data.has_key('result'):
                     return data['result']
@@ -331,7 +344,7 @@ def get_vdr_recinfo(recdir, extended=False):
         return rec
 
     try:
-        with codecs.open(infofile, 'r', encoding='utf8') as f:
+        with codecs.open(infofile, 'r', encoding=sys_encoding) as f:
             for line in f.readlines():
                 if line[:2] == 'T ':
                     title = line[2:].rstrip('\n')
@@ -463,15 +476,16 @@ def is_now_playing(rec):
     except:
         return False
 
-    for host in find_clients(vdr_port, True):
-        players = json_request('Player.GetActivePlayers', False, host)
+    for client in find_clients(vdr_port, True):
+        players = json_request('Player.GetActivePlayers', host=client)
         if players and len(players) > 0 and players[0]['type'] == 'video':
             playerid = players[0]['playerid']
-            playeritem = json_request('Player.GetItem', {'properties': ['title', 'file'], 'playerid': playerid}, host)
+            playeritem = json_request('Player.GetItem', params={'properties': ['title', 'file'], 'playerid': playerid}, host=client)
 
             try:
                 if playeritem and playeritem['item']['type'] != 'channel':
-                    file = urllib2.unquote(playeritem['item']['file'].encode('utf-8'))
+                    #file = urllib2.unquote(playeritem['item']['file'].encode(sys_encoding))
+                    file = urllib2.unquote(playeritem['item']['file'])
                     if rec_file in file:
                         return True
             except KeyError:
@@ -484,7 +498,7 @@ def get_vdr_channel(channelid):
     channel = ''
 
     try:
-        pvrdetails = json_request('PVR.GetChannelDetails', {'channelid': channelid}, 'localhost')
+        pvrdetails = json_request('PVR.GetChannelDetails', params={'channelid': channelid})
         if pvrdetails and pvrdetails['channeldetails']['channelid'] == channelid:
             channel = pvrdetails['channeldetails']['label']
     except:
@@ -497,7 +511,7 @@ def get_timers():
     timers = []
 
     try:
-        pvrtimers = json_request('PVR.GetTimers', {'properties': ['title', 'starttime', 'endtime', 'state', 'channelid']}, 'localhost')
+        pvrtimers = json_request('PVR.GetTimers', params={'properties': ['title', 'starttime', 'endtime', 'state', 'channelid']})
         if pvrtimers:
             for timer in pvrtimers['timers']:
                 t = {'id':timer['timerid'], 'title':timer['title'], 'channel':get_vdr_channel(timer['channelid']), 'start':utc_to_local(timer['starttime'], time_fmt), 'end':utc_to_local(timer['endtime'], time_fmt), 'state':timer['state']}
@@ -517,18 +531,18 @@ def get_recs(topdir, expand=False, sort=None):
             if not files:
                 continue
             if 'info' in files and '00001.ts' in files:
-                r = {'path':path, 'recording':get_vdr_recinfo(path, extended=expand)}
+                r = {'path':unicode(path, encoding=sys_encoding), 'recording':get_vdr_recinfo(path, extended=expand)}
                 recs.append(r)
 
     if expand:
         try:
-            pvrrecordings = json_request('PVR.GetRecordings',{'properties': ['title', 'file', 'channel', 'starttime', 'endtime'],}, 'localhost')
+            pvrrecordings = json_request('PVR.GetRecordings',params={'properties': ['title', 'file', 'channel', 'starttime', 'endtime'],})
             if pvrrecordings:
                 for recording in pvrrecordings['recordings']:
                     for rec in recs:
                         if recording['title'] in rec['recording']['title'] and recording['channel'] in rec['recording']['channel'] and utc_to_local(recording['starttime'], time_fmt) in rec['recording']['start']:
                             rec['recording']['id'] = recording['recordingid']
-                            rec['recording']['file'] = urllib2.unquote(recording['file'].encode('utf-8'))
+                            rec['recording']['file'] = urllib2.unquote(recording['file'])
 
         except KeyError:
             pass
@@ -597,39 +611,46 @@ def is_tool(name):
 def convert(rec, dest, delsource='False'):
     readsize = 1024
     suffix = ''
-    destdir = dest
+    recname = ''
     infilename = ''
+    outfilename = ''
     map_cmd = ''
 
     if not lock.acquire(False):
         return
 
-    recdir = unicode(os.path.realpath(rec['path']), encoding='utf-8')
-    if not os.path.isdir(recdir):
+    recdir = unicode(os.path.realpath(rec['path'].encode(sys_encoding)), encoding=sys_encoding)
+    if not os.path.isdir(recdir.encode(sys_encoding)):
         return
 
-    try:
-        xbmc.log(msg='[{}] Archiving VDR recording in \'{}\' ...'.format(__addon_id__, recdir.encode('utf-8')), level=xbmc.LOGNOTICE)
+    destdir = unicode(dest, encoding=dst_encoding)
 
-        main_genre_name = genres['F0' if group_shows and rec['recording']['episode'] > 0 else (rec['recording']['genre'][0][:-1]  + '0')]
-        genre_name = genres[rec['recording']['genre'][0]]
+    try:
+        xbmc.log(msg='[{}] Archiving VDR recording in \'{}\' ...'.format(__addon_id__, recdir.encode(sys_encoding)), level=xbmc.LOGNOTICE)
+
+        # unicode() ???
+        main_genre = genres['F0' if group_shows and rec['recording']['episode'] > 0 else (rec['recording']['genre'][0][:-1]  + '0')]
+        genre = genres[rec['recording']['genre'][0]]
+
         if create_genre or (group_shows and rec['recording']['episode'] > 0):
-            if main_genre_name:
-                destdir = os.path.join(destdir, main_genre_name)
+            if main_genre:
+                destdir = os.path.join(destdir, main_genre)
+
         if create_genre and ((group_shows and rec['recording']['episode'] > 0) or rec['recording']['genre'][0][-1] != '0'):
-            if genre_name:
-                destdir = os.path.join(destdir, genre_name)
+            if genre:
+                destdir = os.path.join(destdir, genre)
 
         if create_title or group_shows:
             # replace ':' with ' -' to make path windows-friendly
-            destdir = os.path.join(destdir, rec['recording']['title'].replace(':', ' -'))
+            title = rec['recording']['title'].replace(':', ' -')
+            destdir = os.path.join(destdir, title)
 
         try:
-            if not os.path.exists(destdir):
-                xbmc.log(msg='[{}] Creating destination directory \'{}\'.'.format(__addon_id__, destdir.encode('utf-8')), level=xbmc.LOGNOTICE)
-                os.makedirs(destdir, 0775)
+            if not os.path.exists(destdir.encode(dst_encoding)):
+                xbmc.log(msg='[{}] Creating destination directory \'{}\'.'.format(__addon_id__, destdir.encode(sys_encoding)), level=xbmc.LOGNOTICE)
+                os.makedirs(destdir.encode(dst_encoding), 0775)
         except:
-            xbmc.log(msg='[{}] Error creating destination directory \'{}\'.'.format(__addon_id__, destdir.encode('utf-8')), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Error creating destination directory \'{}\'.'.format(__addon_id__, destdir.encode(sys_encoding)), level=xbmc.LOGNOTICE)
             return
 
         if add_episode and rec['recording']['episode'] > 0:
@@ -646,15 +667,15 @@ def convert(rec, dest, delsource='False'):
 
         outfilename = os.path.join(destdir, recname + '.mp4')
 
-        if os.path.exists(outfilename):
+        if os.path.exists(outfilename.encode(dst_encoding)):
             if output_overwrite:
-                xbmc.log(msg='[{}] Output file \'{}\' already exists. Remove.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
-                os.remove(outfilename)
+                xbmc.log(msg='[{}] Output file \'{}\' already exists. Remove.'.format(__addon_id__, os.path.basename(outfilename).encode(sys_encoding)), level=xbmc.LOGNOTICE)
+                os.remove(outfilename.encode(dst_encoding))
             else:
-                xbmc.log(msg='[{}] Output file \'{}\' already exists. Abort.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
+                xbmc.log(msg='[{}] Output file \'{}\' already exists. Abort.'.format(__addon_id__, os.path.basename(outfilename).encode(sys_encoding)), level=xbmc.LOGNOTICE)
                 return
 
-        tsfiles = [os.path.join(recdir, file) for file in os.listdir(recdir) if file.endswith('.ts')]
+        tsfiles = [os.path.join(recdir.encode(sys_encoding), file) for file in os.listdir(recdir.encode(sys_encoding)) if file.endswith('.ts')]
 
         if len(tsfiles) > 1:
             tsfiles.sort()
@@ -700,7 +721,7 @@ def convert(rec, dest, delsource='False'):
 
         try:
             data = subprocess.check_output(['ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', probefilename,])
-            output = json.loads(data.decode('utf-8'))
+            output = json.loads(data.decode(sys_encoding))
         except subprocess.CalledProcessError as exc:
             xbmc.log(msg='[{}] Error analyzing input file: {}. Proceed with defaults.'.format(__addon_id__, exc.ouput), level=xbmc.LOGNOTICE)
         else:
@@ -714,16 +735,17 @@ def convert(rec, dest, delsource='False'):
 
                     if type in ['audio', 'subtitle']:
                         lang = stream['tags']['language']
-                        xbmc.log(msg='[{}] Found Stream {} of type {}({}) using codec {}'.format(__addon_id__, index, type, lang, codec), level=xbmc.LOGNOTICE)
+                        xbmc.log(msg='[{}] Found stream {} of type {}({}) using codec {}'.format(__addon_id__, index, type, lang, codec), level=xbmc.LOGNOTICE)
                     #elif type == 'video':
                     else:
-                        xbmc.log(msg='[{}] Found Stream {} of type {} using codec {}'.format(__addon_id__, index, type, codec), level=xbmc.LOGNOTICE)
+                        xbmc.log(msg='[{}] Found stream {} of type {} using codec {}'.format(__addon_id__, index, type, codec), level=xbmc.LOGNOTICE)
 
                     if type in ['audio', 'video'] and retain_audio:
                         if type == 'audio' and len(filter_lang) > 0:
                             if lang in filter_lang:
                                 cmd_pre.extend(['-map', '0:' + str(index)])
                             else:
+                                xbmc.log(msg='[{}] - Ignoring stream {}: Audio Language \'{}\' is not in selection'.format(__addon_id__, index, lang), level=xbmc.LOGNOTICE)
                                 continue
                         else:
                             cmd_pre.extend(['-map', '0:' + str(index)])
@@ -748,6 +770,9 @@ def convert(rec, dest, delsource='False'):
                             else:
                                 cmd_audio.extend(['-c:a:' + str(audio_idx), 'copy'])
 
+                    if type == 'subtitle':
+                        xbmc.log(msg='[{}] - Ignoring stream {}: Subtitles are currently not processed'.format(__addon_id__, index), level=xbmc.LOGNOTICE)
+
                     # assume only one video stream
                     if type == 'video':
                         video_wd = int(stream['width'])
@@ -765,55 +790,59 @@ def convert(rec, dest, delsource='False'):
                             cmd_video.extend(['-vf', 'scale=720:576'])
 
         cmd = cmd_pre + cmd_audio + cmd_video
-        cmd.append(outfilename)
 
         cmd_str = ''
         for c in cmd:
             cmd_str += c + ' '
-        # remove last blank
-        cmd_str = cmd_str[:-1]
 
-        xbmc.log(msg='[{}] Starting conversion to output file \'{}\' ...'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
-        xbmc.log(msg='[{}] Calling \'{}\''.format(__addon_id__, cmd_str.encode('utf-8')), level=xbmc.LOGDEBUG)
+        cmd_str += outfilename.encode(sys_encoding)
+
+        # Debug: cmd = ['touch']
+        cmd.append(outfilename.encode(dst_encoding))
+
+        xbmc.log(msg='[{}] Starting conversion to output file \'{}\' ...'.format(__addon_id__, os.path.basename(outfilename).encode(sys_encoding)), level=xbmc.LOGNOTICE)
+        xbmc.log(msg='[{}] Calling \'{}\''.format(__addon_id__, cmd_str), level=xbmc.LOGDEBUG)
+
         try:
             subprocess.check_call(cmd, preexec_fn=lambda: os.nice(19))
         except OSError as e:
             #if e.errno == os.errno.ENOENT:
-            xbmc.log(msg='[{}] Error. Looks like ffmpeg isn\'t installed.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Error. Looks like ffmpeg isn\'t installed.'.format(__addon_id__, os.path.basename(outfilename).encode(sys_encoding)), level=xbmc.LOGNOTICE)
             return
         except subprocess.CalledProcessError as exc:
-            xbmc.log(msg='[{}] Error writing ouput file \'{}\': {}'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8'), exc.ouput), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Error writing ouput file \'{}\': {}'.format(__addon_id__, os.path.basename(outfilename).encode(sys_encoding), exc.ouput), level=xbmc.LOGNOTICE)
             return
         except:
-            xbmc.log(msg='[{}] Unspecified Error writing output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Unspecified Error writing output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename).encode(sys_encoding)), level=xbmc.LOGNOTICE)
             return
 
-        if os.path.exists(outfilename):
-            xbmc.log(msg='[{}] Output file \'{}\' succesfully created.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
-            os.chmod(outfilename, 0664)
+        if os.path.exists(outfilename.encode(dst_encoding)):
+            xbmc.log(msg='[{}] Output file \'{}\' succesfully created.'.format(__addon_id__, os.path.basename(outfilename).encode(sys_encoding)), level=xbmc.LOGNOTICE)
+            os.chmod(outfilename.encode(dst_encoding), 0664)
+            xbmc.log(msg='[{}] Changed permissions on output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename).encode(sys_encoding)), level=xbmc.LOGNOTICE)
         else:
-            xbmc.log(msg='[{}] Couldn\*t create output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename).encode('utf-8')), level=xbmc.LOGNOTICE)
+            xbmc.log(msg='[{}] Couldn\'t create output file \'{}\'.'.format(__addon_id__, os.path.basename(outfilename).encode(sys_encoding)), level=xbmc.LOGNOTICE)
             return
 
-        if delsource and os.access(recdir, os.W_OK):
+        if delsource and os.access(recdir.encode(sys_encoding), os.W_OK):
             try:
-                for file in os.listdir(recdir):
-                    os.remove(os.path.join(recdir, file))
+                for file in os.listdir(recdir.encode(sys_encoding)):
+                    os.remove(os.path.join(recdir.encode(sys_encoding), file))
                     xbmc.log(msg='[{}] Delete source: Removing source file \'{}\'.'.format(__addon_id__, file), level=xbmc.LOGNOTICE)
-                if not os.listdir(recdir):
-                    os.rmdir(recdir)
+                if not os.listdir(recdir.encode(sys_encoding)):
+                    os.rmdir(recdir.encode(sys_encoding))
                 else:
                     xbmc.log(msg='[{}] Delete source: Couldn\'t cleanup source directory.'.format(__addon_id__), level=xbmc.LOGNOTICE)
-                if not os.listdir(os.path.dirname(recdir)) and os.access(os.path.dirname(recdir), os.W_OK):
-                    os.rmdir(os.path.dirname(recdir))
+                if not os.listdir(os.path.dirname(recdir.encode(sys_encoding))) and os.access(os.path.dirname(recdir.encode(sys_encoding)), os.W_OK):
+                    os.rmdir(os.path.dirname(recdir.encode(sys_encoding)))
             except OSError:
                 xbmc.log(msg='[{}] Delete source: Permissions denied.'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
     finally:
-        if os.path.exists(outfilename) and not sys.exc_info()[1]:
+        if outfilename and os.path.exists(outfilename.encode(dst_encoding)) and not sys.exc_info()[1]:
             xbmc.log(msg='[{}] Archiving completed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
             if notification_success:
-                notification = 'Notification({},{})'.format(__localize__(30040), recname.encode('utf-8'))
+                notification = 'Notification({},{})'.format(__localize__(30040), recname.encode(sys_encoding))
                 xbmc.executebuiltin(notification)
         else:
             if sys.exc_info()[1]:
@@ -821,14 +850,16 @@ def convert(rec, dest, delsource='False'):
             else:
                 xbmc.log(msg='[{}] Archiving failed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
             if notification_fail:
-                notification = 'Notification({},{})'.format(__localize__(30041), recname.encode('utf-8'))
+                notification = 'Notification({},{})'.format(__localize__(30041), recname.encode(sys_encoding))
                 xbmc.executebuiltin(notification)
             # in case of failure if the output file has been created, remove it:
-            if os.path.exists(outfilename):
-                os.remove(outfilename)
+            if os.path.exists(outfilename.encode(dst_encoding)):
+                os.remove(outfilename.encode(dst_encoding))
+                if (create_title or group_shows) and not os.listdir(destdir.encode(dst_encoding)):
+                    os.rmdir(destdir.encode(dst_encoding))
 
-        if os.path.islink(rec['path']):
-            os.unlink(rec['path'])
+        if os.path.islink(rec['path'].encode(sys_encoding)):
+            os.unlink(rec['path'].encode(sys_encoding))
 
         lock.release()
         return
