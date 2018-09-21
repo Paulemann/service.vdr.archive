@@ -118,9 +118,9 @@ class MyMonitor( xbmc.Monitor ):
         load_addon_settings()
 
 
-def read_set(string):
+def read_set(item, default):
     ret = set()
-    for element in string.split(','):
+    for element in read_val(item, default).split(','):
         try:
             item = int(element)
         except ValueError:
@@ -129,118 +129,50 @@ def read_set(string):
     return ret
 
 
+def read_val(item, default):
+    try:
+        value = int(__setting__(item))
+    except ValueError:
+        try:
+            if __setting__(item).lower() == 'true' or __setting__(item).lower() == 'false':
+                value = bool(__setting__(item).lower() == 'true')
+            else:
+                value = __setting__(item)
+        except ValueError:
+            value = default
+
+    return value
+
+
 def load_addon_settings():
     global sleep_time, add_episode, add_channel, add_starttime, add_new, create_title, create_genre, del_source, vdr_dir, vdr_port, scan_dir, dest_dir, group_shows, retain_audio, recode_audio, deinterlace_video, force_sd, filter_lang, output_overwrite, notification_success, notification_fail, sys_encoding, dst_encoding
 
-    try:
-        sleep_time = int(__setting__('sleep'))
-    except ValueError:
-        sleep_time = 300
+    sleep_time           = read_val('sleep', 300)
+    vdr_port             = read_val('pvrport', 34890)
 
-    try:
-        vdr_port = int(__setting__('pvrport'))
-    except ValueError:
-        vdr_port = 34890
+    del_source           = read_val('delsource', False)
+    add_new              = read_val('addnew', False)
+    add_episode          = read_val('addepisode', False)
+    add_channel          = read_val('addchannel', True)
+    add_starttime        = read_val('addstarttime', True)
+    create_title         = read_val('createtitle', False)
+    create_genre         = read_val('creategenre', False)
+    group_shows          = read_val('groupshows', False)
 
-    try:
-        del_source = True if __setting__('delsource').lower() == 'true' else False 
-    except:
-        del_source = False
+    vdr_dir              = read_val('recdir', '/home/kodi/Aufnahmen')
+    scan_dir             = read_val('scandir', '/home/kodi/tmp')
+    dest_dir             = read_val('destdir', '/home/kodi/Videos')
 
-    try:
-        add_new = True if __setting__('addnew').lower() == 'true' else False
-    except:
-        add_new = False
+    retain_audio         = read_val('retainaudio', True)
+    force_sd             = read_val('forcesd', False)
+    deinterlace_video    = read_val('deinterlace', True)
+    recode_audio         = read_val('recode', False)
+    output_overwrite     = read_val('overwrite', True)
+    notification_success = read_val('successnote', True)
+    notification_fail    = read_val('failurenote', True)
+    use_win_encoding     = read_val('winencoding', False)
 
-    try:
-        add_episode = True if __setting__('addepisode').lower() == 'true' else False
-    except:
-        add_episode = False
-
-    try:
-        add_channel = True if __setting__('addchannel').lower() == 'true' else False
-    except:
-        add_channel = True
-
-    try:
-        add_starttime = True if __setting__('addstarttime').lower() == 'true' else False
-    except:
-        add_starttime = True
-
-    try:
-        create_title = True if __setting__('createtitle').lower() == 'true' else False
-    except:
-        create_title = False
-
-    try:
-        create_genre = True if __setting__('creategenre').lower() == 'true' else False
-    except:
-        create_genre = False
-
-    try:
-        group_shows = True if __setting__('groupshows').lower() == 'true' else False
-    except:
-        group_shows = False
-
-    try:
-        vdr_dir = __setting__('recdir')
-    except:
-        vdr_dir = '/home/kodi/Aufnahmen'
-
-    try:
-        scan_dir = __setting__('scandir')
-    except:
-        scan_dir = '/home/kodi/tmp'
-
-    try:
-        retain_audio = True if __setting__('retainaudio').lower() == 'true' else False
-    except:
-        retain_audio = True
-
-    try:
-        force_sd = True if __setting__('forcesd').lower() == 'true' else False
-    except:
-        force_sd = False
-
-    try:
-        dest_dir = __setting__('destdir')
-    except:
-        dest_dir = '/home/kodi/Videos'
-
-    try:
-        deinterlace_video = True if __setting__('deinterlace').lower() == 'true' else False
-    except:
-        deinterlace_video = True
-
-    try:
-        filter_lang = read_set(__setting__('filter'))
-    except:
-        filter_lang = {'deu', 'eng'}
-
-    try:
-        recode_audio = True if __setting__('recode').lower() == 'true' else False
-    except:
-        recode_audio = False
-
-    try:
-        output_overwrite = True if __setting__('overwrite').lower() == 'true' else False
-    except:
-        output_overwrite = True
-
-    try:
-        notification_success = True if __setting__('successnote').lower() == 'true' else False
-    except:
-        notification_success = True
-
-    try:
-        notification_fail = True if __setting__('failurenote').lower() == 'true' else False
-    except:
-        notification_fail = True
-
-    try:
-        use_win_encoding = True if __setting__('winencoding').lower() == 'true' else False
-    except:
-        use_win_encoding = False
+    filter_lang          = read_set('filter', 'deu, eng')
 
     #sys_encoding = locale.getpreferredencoding()
     sys_encoding = sys.getfilesystemencoding()
@@ -394,8 +326,7 @@ def get_vdr_recinfo(recdir, extended=False):
 
 
 def find_clients(port, include_localhost):
-    #clients = set()
-    clients = []
+    clients = set()
 
     my_env = os.environ.copy()
     my_env['LC_ALL'] = 'en_EN'
@@ -409,19 +340,15 @@ def find_clients(port, include_localhost):
         local_addr, local_port = items[3].rsplit(':', 1)
         remote_addr, remote_port = items[4].rsplit(':', 1)
 
-        if local_addr[0] == '[' and local_addr[-1] == ']':
-            local_addr = local_addr[1:-1]
+        if local_addr:
+            local_addr  = local_addr.strip('[]')
+        if remote_addr:
+            remote_addr = remote_addr.strip('[]')
+        local_port  = int(local_port)
 
-        if remote_addr[0] == '[' and remote_addr[-1] == ']':
-            remote_addr = remote_addr[1:-1]
-
-        local_port = int(local_port)
-
-        if local_port == port:
-            if remote_addr not in clients:
-                if remote_addr != local_addr or include_localhost:
-                    #clients.add(remote_addr) # doesn't require "if remote_addr not in clients:"
-                    clients.append(remote_addr)
+        if remote_addr and local_port == port:
+            if remote_addr != local_addr or include_localhost:
+                clients.add(remote_addr)
 
     return clients
 
