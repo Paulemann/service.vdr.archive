@@ -569,7 +569,7 @@ def convert(rec, dest, delsource='False'):
 
         if create_title or group_shows:
             # replace ':' with ' -' to make path windows-friendly
-            title = rec['recording']['title'].replace(':', ' -')
+            title = rec['recording']['title'].replace(':', ' -').replace('?', '')
             destdir = os.path.join(destdir, title)
 
         try:
@@ -590,7 +590,7 @@ def convert(rec, dest, delsource='False'):
             suffix = suffix + '_' + rec['recording']['start']
 
         # replace ':' with ' -' to make path windows-friendly
-        recname = rec['recording']['title'].replace(':', ' -') + suffix
+        recname = rec['recording']['title'].replace(':', ' -').replace('?', '') + suffix
 
         outfilename = os.path.join(destdir, recname + '.mp4')
 
