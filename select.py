@@ -11,7 +11,7 @@ import xbmcaddon
 import pyxbmct.addonwindow as pyxbmct
 
 from datetime import datetime
-from service import get_recs, get_timers, is_active_recording, get_vdr_dir, get_scan_dir
+from service import get_recs, get_timers, is_active_recording, get_vdr_dir, get_temp_dir
 
 
 __addon__ = xbmcaddon.Addon()
@@ -121,10 +121,10 @@ if __name__ == '__main__':
         rec_sort = 0
 
     vdr_dir = get_vdr_dir()
-    scan_dir = get_scan_dir()
-    if not os.path.isdir(scan_dir):
+    temp_dir = get_temp_dir()
+    if not os.path.isdir(temp_dir):
         try:
-            os.makedirs(scan_dir, 0755)
+            os.makedirs(temp_dir, 0755)
         except OSError:
             xbmc.log(msg='[{}] Error: The temporary folder does not exist.'.format(__addon_id__), level=xbmc.LOGNOTICE)
             raise
@@ -137,11 +137,11 @@ if __name__ == '__main__':
 
     for index, rec in enumerate(recs):
         prefix = '*' if is_active_recording(rec, timers) else ' '
-        #item = '{}{} {}: {} ({})'.format(prefix, convert_date(rec['recording']['start'], time_fmt, '%d.%m.%Y %H:%M'), rec['recording']['channel'].encode('utf-8'), rec['recording']['title'].encode('utf-8'), rec['recording']['subtitle'].encode('utf-8'))
-        item = '{}{}: \"{} ({})\" - {}'.format(prefix, convert_date(rec['recording']['start'], time_fmt, '%d.%m.%Y %H:%M'), rec['recording']['title'].encode('utf-8'), rec['recording']['subtitle'].encode('utf-8'), rec['recording']['channel'].encode('utf-8'))
+        #item = '{}{} {}: {} ({})'.format(prefix, convert_date(rec['recording']['start'], time_fmt, '%d.%m.%Y %H:%M'), rec['recording']['channel'].encode('utf-8'), rec['recording']['title'].encode('utf-8'), rec['recording']['short'].encode('utf-8'))
+        item = '{}{}: \"{} ({})\" - {}'.format(prefix, convert_date(rec['recording']['start'], time_fmt, '%d.%m.%Y %H:%M'), rec['recording']['title'].encode('utf-8'), rec['recording']['short'].encode('utf-8'), rec['recording']['channel'].encode('utf-8'))
         items.append(item)
 
-        if os.path.islink(os.path.join(scan_dir, os.path.basename(rec['path']))):
+        if os.path.islink(os.path.join(temp_dir, os.path.basename(rec['path']))):
             pre_select.append(index)
 
     dialog = MultiChoiceDialog(__localize__(30050), items, pre_select)
@@ -151,13 +151,13 @@ if __name__ == '__main__':
         unselect = [index  for index in pre_select if index not in dialog.selected]
         for index in unselect:
             try:
-                os.unlink(os.path.join(scan_dir, os.path.basename(recs[index]['path'])))
+                os.unlink(os.path.join(temp_dir, os.path.basename(recs[index]['path'])))
             except:
                 continue
 
         for index in dialog.selected:
             try:
-                os.symlink(recs[index]['path'], os.path.join(scan_dir, os.path.basename(recs[index]['path'])))
+                os.symlink(recs[index]['path'], os.path.join(temp_dir, os.path.basename(recs[index]['path'])))
             except:
                 continue
 
