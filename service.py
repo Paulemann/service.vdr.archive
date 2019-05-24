@@ -148,8 +148,8 @@ def read_val(item, default):
 def load_addon_settings():
     global sleep_time, add_episode, add_channel, add_starttime, add_new, create_title, create_genre
     global del_source, vdr_dir, vdr_port, temp_dir, dest_dir, group_shows, unknown_lang
-    global retain_audio, recode_audio, deinterlace_video, force_sd, filter_lang, output_overwrite
-    global notification_success, notification_fail, loc_encoding, dst_encoding
+    global individual_streams, recode_audio, deinterlace_video, force_sd, audio_filter_lang, sub_filter_lang
+    global output_overwrite, notification_success, notification_fail, loc_encoding, dst_encoding, subtitles
 
     sleep_time           = read_val('sleep', 300)
     vdr_port             = read_val('pvrport', 34890)
@@ -167,8 +167,9 @@ def load_addon_settings():
     temp_dir             = read_val('scandir', '/home/kodi/tmp')
     dest_dir             = read_val('destdir', '/home/kodi/Videos')
 
-    retain_audio         = read_val('retainaudio', True)
+    individual_streams   = read_val('allstreams', True)
     force_sd             = read_val('forcesd', False)
+    subtitles            = read_val('subtitles', False)
     deinterlace_video    = read_val('deinterlace', True)
     recode_audio         = read_val('recode', False)
     output_overwrite     = read_val('overwrite', True)
@@ -177,8 +178,9 @@ def load_addon_settings():
     use_win_encoding     = read_val('winencoding', False)
 
     unknown_lang         = 'unknown'
-    filter_lang          = read_set('filter', 'deu, eng')
-    filter_lang.add(unknown_lang)
+    audio_filter_lang    = read_set('filter', 'deu, eng')
+    sub_filter_lang      = audio_filter_lang
+    audio_filter_lang.add(unknown_lang)
 
     #loc_encoding = locale.getpreferredencoding()
     loc_encoding = sys.getfilesystemencoding()
@@ -186,6 +188,11 @@ def load_addon_settings():
 
     if __name__ == '__main__':
         xbmc.log(msg='[{}] Settings loaded.'.format(__addon_id__), level=xbmc.LOGNOTICE)
+        if not os.path.isdir(lenc(vdr_dir)):
+            xbmc.log(msg='[{}] Error: VDR Source directory \'{}\' doesn\'t exist or isn\'t local.'.format(__addon_id__, lenc(vdr_cdir)), level=xbmc.LOGNOTICE)
+        else:
+            return
+        xbmc.executebuiltin('Notification({},{})'.format(__addon_id__, __localize__(30042)))
 
     return
 
@@ -667,6 +674,7 @@ def convert(rec, dest, delsource='False'):
         cmd_video = ['-c:v', 'copy']
 
         audio_idx = -1
+        sub_idx = -1
 
         xbmc.log(msg='[{}] Analyzing input file ...'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
@@ -677,7 +685,7 @@ def convert(rec, dest, delsource='False'):
             xbmc.log(msg='[{}] Error analyzing input file: {}. Proceed with defaults.'.format(__addon_id__, exc.ouput), level=xbmc.LOGNOTICE)
         else:
             if 'streams' in output:
-                if retain_audio:
+                if individual_streams:
                     cmd_audio = []
                 for stream in output['streams']:
                     type = stream['codec_type']
@@ -692,8 +700,8 @@ def convert(rec, dest, delsource='False'):
                     if type == 'audio':
                         xbmc.log(msg='[{}] Found stream {} of type {}({}) using codec {}'.format(__addon_id__, index, type, lang, codec), level=xbmc.LOGNOTICE)
 
-                        if retain_audio:
-                            if filter_lang and lang not in filter_lang:
+                        if individual_streams:
+                            if audio_filter_lang and lang not in audio_filter_lang:
                                 xbmc.log(msg='[{}] - Ignoring stream {}: Audio Language \'{}\' is not in selection'.format(__addon_id__, index, lang), level=xbmc.LOGNOTICE)
                                 continue
 
@@ -719,27 +727,40 @@ def convert(rec, dest, delsource='False'):
                             else:
                                 cmd_audio.extend(['-c:a:' + str(audio_idx), 'copy'])
 
+                            #cmd_audio.extend(['-metadata:s:' + str(index), 'language=' + lang])
+                            cmd_audio.extend(['-metadata:s:a:' + str(audio_idx), 'language=' + lang])
+
                     if type == 'subtitle':
                         xbmc.log(msg='[{}] Found stream {} of type {}({}) using codec {}'.format(__addon_id__, index, type, lang, codec), level=xbmc.LOGNOTICE)
 
-                        #xbmc.log(msg='[{}] - Ignoring stream {}: Subtitles are currently not processed'.format(__addon_id__, index), level=xbmc.LOGNOTICE)
+                        if subtitles:
+                            if individual_streams:
+                                if sub_filter_lang and lang not in sub_filter_lang:
+                                    xbmc.log(msg='[{}] - Ignoring stream {}: Subtitle language \'{}\' is not in selection'.format(__addon_id__, index, lang), level=xbmc.LOGNOTICE)
+                                    continue
 
-                        #if include_subtitle:
-                        if filter_lang and lang not in filter_lang:
-                            xbmc.log(msg='[{}] - Ignoring stream {}: Subtitle Language \'{}\' is not in selection'.format(__addon_id__, index, lang), level=xbmc.LOGNOTICE)
-                            continue
+                                cmd_pre.extend(['-map', '0:' + str(index)])
 
-                        cmd_pre.extend(['-map', '0:' + str(index)])
-                        # insert canvas_size before inputfile, 704x576 for ubtitles should match any case
-                        cmd_pre[3:3] = ['-canvas_size', '704x576']
+                            sub_idx += 1
 
-                        cmd_sub.extend(['-c:s', 'dvdsub'])
+                            xbmc.log(msg='[{}] - Processing stream {}: Subtitle for language \'{}\''.format(__addon_id__, index, lang), level=xbmc.LOGNOTICE)
+
+                            # do only once and if at least one matching subtitle was found
+                            if  not cmd_sub:
+                                # insert canvas_size before inputfile, 704x576 for ubtitles should match any case
+                                cmd_pre[3:3] = ['-canvas_size', '704x576']
+
+                                cmd_sub.extend(['-c:s', 'dvdsub'])
+
+                            cmd_sub.extend(['-metadata:s:s:' + str(sub_idx), 'language=' + lang])
+                        else:
+                            xbmc.log(msg='[{}] - Ignoring stream {}: No subtitle processing set'.format(__addon_id__, index), level=xbmc.LOGNOTICE)
 
                     # assume there's only one video stream
                     if type == 'video':
                         xbmc.log(msg='[{}] Found stream {} of type {} using codec {}'.format(__addon_id__, index, type, codec), level=xbmc.LOGNOTICE)
 
-                        if retain_audio:
+                        if individual_streams:
                             cmd_pre.extend(['-map', '0:' + str(index)])
 
                         video_wd = int(stream['width'])
@@ -757,7 +778,9 @@ def convert(rec, dest, delsource='False'):
                             cmd_video.extend(['-vf', 'scale=720:576'])
 
         # alternatively insert canvas_size here, after we learned actual video size
-        #cmd_pre[3:3] = ['-canvas_size', str(video_wd) + 'x' + str(video_ht)]
+        #if cmd_sub:
+        #    cmd_pre[3:3] = ['-canvas_size', str(video_wd - 16) + 'x' + str(video_ht)]
+
         cmd = cmd_pre + cmd_audio + cmd_video + cmd_sub
 
         cmd_str = ''

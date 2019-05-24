@@ -31,7 +31,7 @@ msgstr "Pfad zum temporären Verzeichnis"
 
 msgctxt "#30003"
 msgid "Path to destination folder"
-msgstr "Pfad zum Zielverzecihnis"
+msgstr "Pfad zum Zielverzeichnis"
 
 msgctxt "#30004"
 msgid "Delete source after successful archiving"
@@ -49,9 +49,13 @@ msgctxt "#30007"
 msgid "Time between checks (seconds)"
 msgstr "Zeit zwischen Überprüfungen (in Sek.)"
 
+msgctxt "#30008"
+msgid "Destination has windows character encoding"
+msgstr "Ziel verwendet Windows-Zeichenkodierung"
+
 msgctxt "#30010"
-msgid "Advanced"
-msgstr "Erweitert"
+msgid "Output"
+msgstr "Ausgabe"
 
 msgctxt "#30011"
 msgid "Expand title with seasosn/episode info"
@@ -98,8 +102,8 @@ msgid "By title (descending)"
 msgstr "Nach Titel (absteigend)"
 
 msgctxt "#30022"
-msgid "Process multipple audio streams"
-msgstr "Mehrere Audio-Streams verarbeiten"
+msgid "Process all input streams"
+msgstr "Alle Eingabe-Streams verarbeiten"
 
 msgctxt "#30023"
 msgid "Select languages"
@@ -129,6 +133,14 @@ msgctxt "#30029"
 msgid "Convert HD videos to SD format"
 msgstr "HD-Videos in SD-Format umwandeln"
 
+msgctxt "#30030"
+msgid "Subtitles"
+msgstr "Untertitel"
+
+msgctxt "#30035"
+msgid "Conversion"
+msgstr "Umwandlung"
+
 msgctxt "#30040"
 msgid "Archiving completed"
 msgstr "Archivierung abgeschlossen"
@@ -136,6 +148,10 @@ msgstr "Archivierung abgeschlossen"
 msgctxt "#30041"
 msgid "Archiving failed"
 msgstr "Archivierung fehlgeschlagen"
+
+msgctxt "#30042"
+msgid "Configuration error. Check log file for details"
+msgstr "Konfigurationsfehler. Log-Datei enthält Details"
 
 msgctxt "#30050"
 msgid "Select recordings to archive"

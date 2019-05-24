@@ -49,8 +49,12 @@ msgctxt "#30007"
 msgid "Time between checks (seconds)"
 msgstr ""
 
+msgctxt "#30008"
+msgid "Destination has windows character encoding"
+msgstr ""
+
 msgctxt "#30010"
-msgid "Advanced"
+msgid "Output"
 msgstr ""
 
 msgctxt "#30011"
@@ -98,7 +102,7 @@ msgid "By title (descending)"
 msgstr ""
 
 msgctxt "#30022"
-msgid "Process multipple audio streams"
+msgid "Process all input streams"
 msgstr ""
 
 msgctxt "#30023"
@@ -129,12 +133,24 @@ msgctxt "#30029"
 msgid "Convert HD videos to SD format"
 msgstr ""
 
+msgctxt "#30030"
+msgid "Subtitles"
+msgstr ""
+
+msgctxt "#30035"
+msgid "Conversion"
+msgstr ""
+
 msgctxt "#30040"
 msgid "Archiving completed"
 msgstr ""
 
 msgctxt "#30041"
 msgid "Archiving failed"
+msgstr ""
+
+msgctxt "#30042"
+msgid "Configuration error. Check log file for details"
 msgstr ""
 
 msgctxt "#30050"
