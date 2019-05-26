@@ -192,9 +192,7 @@ def load_addon_settings():
         xbmc.log(msg='[{}] Settings loaded.'.format(__addon_id__), level=xbmc.LOGNOTICE)
         if not os.path.isdir(lenc(vdr_dir)):
             xbmc.log(msg='[{}] Error: VDR Source directory \'{}\' doesn\'t exist or isn\'t local.'.format(__addon_id__, lenc(vdr_cdir)), level=xbmc.LOGNOTICE)
-        else:
-            return
-        xbmc.executebuiltin('Notification({},{})'.format(__addon_id__, __localize__(30042)))
+            xbmc.executebuiltin('Notification({},{})'.format(__addon_id__, __localize__(30042)))
 
     return
 
@@ -321,13 +319,9 @@ def get_vdr_recinfo(recdir, extended=False):
                 if line[:2] == 'E ':
                     estart = int(line[2:].split(' ')[1])
                     length = int(line[2:].split(' ')[2])
-                    #start = time.strftime(time_fmt, time.localtime(estart))
-                    #end = time.strftime(time_fmt, time.localtime(estart + length))
 
-                    start = time.strftime(time_fmt, time.gmtime(estart))
-                    end = time.strftime(time_fmt, time.gmtime(estart + length))
-                    start = utc_to_local(start, time_fmt)
-                    end = utc_to_local(end, time_fmt)
+                    start = time.strftime(time_fmt, time.localtime(estart))
+                    end = time.strftime(time_fmt, time.localtime(estart + length))
 
                     str_start = ', ' + time.strftime('%Y%m%d_%H%M%S', time.gmtime(estart))
 
