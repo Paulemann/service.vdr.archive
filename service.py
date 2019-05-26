@@ -27,6 +27,7 @@ __addon__ = xbmcaddon.Addon()
 __setting__ = __addon__.getSetting
 __addon_id__ = __addon__.getAddonInfo('id')
 __localize__ = __addon__.getLocalizedString
+__profile__ = __addon__.getAddonInfo('profile')
 
 time_fmt = '%Y-%m-%d %H:%M:%S'
 
@@ -163,9 +164,10 @@ def load_addon_settings():
     create_genre         = read_val('creategenre', False)
     group_shows          = read_val('groupshows', False)
 
-    vdr_dir              = read_val('recdir', '/home/kodi/Aufnahmen')
-    temp_dir             = read_val('scandir', '/home/kodi/tmp')
-    dest_dir             = read_val('destdir', '/home/kodi/Videos')
+    vdr_dir              = xbmc.translatePath(read_val('recdir', '/home/kodi/Aufnahmen'))
+    dest_dir             = xbmc.translatePath(read_val('destdir', '/home/kodi/Videos'))
+    #temp_dir             = read_val('scandir', '/home/kodi/tmp')
+    temp_dir             = xbmc.translatePath(__profile__)
 
     individual_streams   = read_val('allstreams', True)
     force_sd             = read_val('forcesd', False)
@@ -518,6 +520,22 @@ def get_recs(topdir, expand=False, sort=None):
     return recs
 
 
+def is_archived_recording(rec):
+    if not rec:
+        return False
+
+    try:
+        rec_dir = os.path.realpath(rec['path'])
+    except:
+        return False
+
+    archivedfile = os.path.join(rec_dir, '.archived')
+    if os.path.exists(archivedfile):
+        return True
+
+    return False
+
+
 def is_active_recording(rec, timers):
     if not rec or not timers:
         return False
@@ -570,11 +588,15 @@ def convert(rec, dest, delsource='False'):
     tempfilename = ''
     outfilename = ''
 
-    if not lock.acquire(False):
-        return
+    # don't oonvert while playing or recording
+    #if is_now_playing(rec) or is_active_recording(rec, vdr_timers):
+    #    return
 
     recdir = uc(os.path.realpath(lenc(rec['path'])), loc_encoding)
     if not os.path.isdir(lenc(recdir)):
+        return
+
+    if not lock.acquire(False):
         return
 
     destdir = uc(dest, dst_encoding)
@@ -820,6 +842,12 @@ def convert(rec, dest, delsource='False'):
             xbmc.log(msg='[{}] Output file \'{}\' succesfully created at destination.'.format(__addon_id__, lenc(os.path.basename(outfilename))), level=xbmc.LOGNOTICE)
             os.remove(lenc(tempfilename))
             xbmc.log(msg='[{}] Temporary file deleted.'.format(__addon_id__), level=xbmc.LOGDEBUG)
+            archivedfile = os.path.join(recdir, '.archived')
+            if os.path.exists(archivedfile):
+                os.utime(archivedfile, None)
+            else:
+                open(archivedfile, 'a').close()
+            xbmc.log(msg='[{}] \'Archived\' marker created/updated.'.format(__addon_id__), level=xbmc.LOGDEBUG)
         else:
             xbmc.log(msg='[{}] Couldn\'t create output file \'{}\' at destination.'.format(__addon_id__, lenc(os.path.basename(outfilename))), level=xbmc.LOGNOTICE)
             return

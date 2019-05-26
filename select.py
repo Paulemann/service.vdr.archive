@@ -11,14 +11,13 @@ import xbmcaddon
 import pyxbmct.addonwindow as pyxbmct
 
 from datetime import datetime
-from service import get_recs, get_timers, is_active_recording, get_vdr_dir, get_temp_dir
+from service import get_recs, get_timers, is_active_recording, is_archived_recording, get_vdr_dir, get_temp_dir
 
 
 __addon__ = xbmcaddon.Addon()
 __setting__ = __addon__.getSetting
 __addon_id__ = __addon__.getAddonInfo('id')
 __addon_path__ = __addon__.getAddonInfo('path')
-__check_icon__ = os.path.join(__addon_path__, 'check.png') # Don't decode _path to utf-8!!!
 __checked_icon__ = os.path.join(__addon_path__, 'checked.png') # Don't decode _path to utf-8!!!
 __unchecked_icon__ = os.path.join(__addon_path__, 'unchecked.png') # Don't decode _path to utf-8!!!
 __localize__ = __addon__.getLocalizedString
@@ -136,9 +135,17 @@ if __name__ == '__main__':
     pre_select = []
 
     for index, rec in enumerate(recs):
-        prefix = '*' if is_active_recording(rec, timers) else ' '
-        #item = '{}{} {}: {} ({})'.format(prefix, convert_date(rec['recording']['start'], time_fmt, '%d.%m.%Y %H:%M'), rec['recording']['channel'].encode('utf-8'), rec['recording']['title'].encode('utf-8'), rec['recording']['short'].encode('utf-8'))
-        item = '{}{}: \"{} ({})\" - {}'.format(prefix, convert_date(rec['recording']['start'], time_fmt, '%d.%m.%Y %H:%M'), rec['recording']['title'].encode('utf-8'), rec['recording']['short'].encode('utf-8'), rec['recording']['channel'].encode('utf-8'))
+        #prefix = '*' if is_active_recording(rec, timers) else ' '
+        if is_active_recording(rec, timers):
+            prefix = 'T'
+        elif is_archived_recording(rec):
+            prefix = 'A'
+        else:
+            prefix = '  '
+        if rec['recording']['short']:
+            item = '{} {}: \"{} ({})\" - {}'.format(prefix, convert_date(rec['recording']['start'], time_fmt, '%d.%m.%Y %H:%M'), rec['recording']['title'].encode('utf-8'), rec['recording']['short'].encode('utf-8'), rec['recording']['channel'].encode('utf-8'))
+        else:
+            item = '{} {}: \"{}\" - {}'.format(prefix, convert_date(rec['recording']['start'], time_fmt, '%d.%m.%Y %H:%M'), rec['recording']['title'].encode('utf-8'), rec['recording']['channel'].encode('utf-8'))
         items.append(item)
 
         if os.path.islink(os.path.join(temp_dir, os.path.basename(rec['path']))):
