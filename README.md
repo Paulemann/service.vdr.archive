@@ -5,15 +5,15 @@ Kodi addon to archive VDR recordings as mp4 video files.
 The addon installs both a service and a script. The script can be 
 invoked from the kodi GUI and lets you select locally stored VDR 
 recordings for archiving. A link to the selected recordings will be
-placed in the configured scan folder. The service will periodically 
-monitor the scan folder for changes and convert all newly added items 
+placed in a temporary folder for processing. The service will 
+periodically monitor this folder and convert all newly added items 
 one by one into a mp4 video file at the configured destination.
 
 If a file is currently being played or recorded conversion is postponed 
 until playback/recording has completed. Any ongoing recording is marked 
 with a leading 'T' (to signal an active timer) in the selection list.
 Accordingly, titles that were successfully archived are marked with a 
-leaing 'A' in the selection list - unless the source has been removed.
+leading 'A' in the selection list - unless the source has been removed.
 
 The following optional settings can be configured:
 - Remove the source file after successful conversion
