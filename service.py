@@ -575,12 +575,8 @@ def is_tool(name):
 
 
 def convert(rec, dest, delsource='False'):
-    readsize = 1024
     suffix = ''
-    recname = ''
     infilename = ''
-    tempfilename = ''
-    outfilename = ''
 
     # don't oonvert while playing or recording
     #if is_now_playing(rec) or is_active_recording(rec, vdr_timers):
@@ -656,11 +652,12 @@ def convert(rec, dest, delsource='False'):
             rec_start = int(time.mktime(time.strptime(rec['recording']['start'], time_fmt)))
             rec_end = int(time.mktime(time.strptime(rec['recording']['end'], time_fmt)))
 
+            # Get Modification date of ts file and cut seconds
+            #   date = int(os.path.getmtime(file)/10)*10
+            #   mtime = time.strftime(time_fmt, time.localtime(date))
+            # Add only files with mtime > rec['recording']['start']
+            # Stop if file with mtime > rec['recording']['end'] was added
             for file in tsfiles:
-                # Get Modification date of ts file and cut seconds
-                #   date = int(os.path.getmtime(file)/10)*10
-                #   mtime = time.strftime(time_fmt, time.localtime(date))
-                # Add only files with mtime > rec['recording']['start'] and mtime > rec['recording']['end']
                 file_mtime = int(os.path.getmtime(file)/10)*10
                 if file_mtime > rec_start:
                     infilename = infilename + file + '|'
@@ -685,12 +682,12 @@ def convert(rec, dest, delsource='False'):
             return
 
         cmd_pre = ['ffmpeg', '-v', '10', '-i', infilename]
-        cmd_sub = []
+        cmd_sub = (['-c:s', 'dvdsub'] if subtitles else [])
         cmd_audio = ['-c:a', 'copy']
         cmd_video = ['-c:v', 'copy']
 
-        audio_idx = -1
-        sub_idx = -1
+        audio_idx = 0
+        sub_idx = 0
 
         xbmc.log(msg='[{}] Analyzing input file ...'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
@@ -703,6 +700,7 @@ def convert(rec, dest, delsource='False'):
             if 'streams' in output:
                 if individual_streams:
                     cmd_audio = []
+                    cmd_sub = []
                 for stream in output['streams']:
                     type = stream['codec_type']
                     codec = stream['codec_name']
@@ -718,33 +716,30 @@ def convert(rec, dest, delsource='False'):
 
                         if individual_streams:
                             if audio_filter_lang and lang not in audio_filter_lang:
-                                xbmc.log(msg='[{}] - Ignoring stream {}: Audio Language \'{}\' is not in selection'.format(__addon_id__, index, lang), level=xbmc.LOGNOTICE)
+                                xbmc.log(msg='[{}] - Ignoring stream: audio language \'{}\' is not in selection'.format(__addon_id__, lang), level=xbmc.LOGNOTICE)
                                 continue
-
-                            cmd_pre.extend(['-map', '0:' + str(index)])
-
-                            audio_idx += 1
 
                             audio_sr = int(stream['sample_rate'])
                             audio_sf = stream['sample_fmt']
                             audio_cl = stream['channel_layout']
                             audio_br = int(stream['bit_rate'])/1000
 
-                            xbmc.log(msg='[{}] - Sample Rate: {} Hz, Channel Layout: {}, Sample Format: {}, Bit Rate: {} kb/s'.format(__addon_id__, audio_sr, audio_cl, audio_sf, audio_br), level=xbmc.LOGNOTICE)
+                            xbmc.log(msg='[{}] - Processing audio stream {} for language \'{}\':  {}, {} Hz, {}, {}, {} kb/s'.format(__addon_id__, audio_idx, lang, codec, audio_sr, audio_cl, audio_sf, audio_br), level=xbmc.LOGNOTICE)
 
+                            cmd_pre.extend(['-map', '0:' + str(index)])
                             if recode_audio and codec == 'mp2' and audio_cl == 'stereo':
-                                    cmd_audio.extend(['-c:a:' + str(audio_idx), 'aac', '-ac:a:' + str(audio_idx), '2', '-b:a:' + str(audio_idx)])
-                                    if audio_br < 160:
-                                        cmd_audio.append('96k')
-                                    elif audio_br > 192:
-                                        cmd_audio.append('192k')
-                                    else:
-                                        cmd_audio.append('128k')
+                                cmd_audio.extend(['-c:a:' + str(audio_idx), 'aac', '-ac:a:' + str(audio_idx), '2', '-b:a:' + str(audio_idx)])
+                                if audio_br < 160:
+                                    cmd_audio.append('96k')
+                                elif audio_br > 192:
+                                    cmd_audio.append('192k')
+                                else:
+                                    cmd_audio.append('128k')
                             else:
                                 cmd_audio.extend(['-c:a:' + str(audio_idx), 'copy'])
-
-                            #cmd_audio.extend(['-metadata:s:' + str(index), 'language=' + lang])
                             cmd_audio.extend(['-metadata:s:a:' + str(audio_idx), 'language=' + lang])
+
+                            audio_idx += 1
 
                     if type == 'subtitle':
                         xbmc.log(msg='[{}] Found stream {} of type {}({}) using codec {}'.format(__addon_id__, index, type, lang, codec), level=xbmc.LOGNOTICE)
@@ -752,38 +747,31 @@ def convert(rec, dest, delsource='False'):
                         if subtitles:
                             if individual_streams:
                                 if sub_filter_lang and lang not in sub_filter_lang:
-                                    xbmc.log(msg='[{}] - Ignoring stream {}: Subtitle language \'{}\' is not in selection'.format(__addon_id__, index, lang), level=xbmc.LOGNOTICE)
+                                    xbmc.log(msg='[{}] - Ignoring stream: subtitle language \'{}\' is not in selection'.format(__addon_id__, lang), level=xbmc.LOGNOTICE)
                                     continue
 
+                                xbmc.log(msg='[{}] - Processing subtitle stream {} for language \'{}\''.format(__addon_id__, sub_idx, lang), level=xbmc.LOGNOTICE)
+
                                 cmd_pre.extend(['-map', '0:' + str(index)])
+                                cmd_sub.extend(['-c:s:' + str(sub_idx), 'dvdsub'])
+                                cmd_sub.extend(['-metadata:s:s:' + str(sub_idx), 'language=' + lang])
 
-                            sub_idx += 1
-
-                            xbmc.log(msg='[{}] - Processing stream {}: Subtitle for language \'{}\''.format(__addon_id__, index, lang), level=xbmc.LOGNOTICE)
-
-                            # do only once and if at least one matching subtitle was found
-                            if  not cmd_sub:
-                                # insert canvas_size before inputfile, 704x576 for ubtitles should match any case
-                                cmd_pre[3:3] = ['-canvas_size', '704x576']
-
-                                cmd_sub.extend(['-c:s', 'dvdsub'])
-
-                            cmd_sub.extend(['-metadata:s:s:' + str(sub_idx), 'language=' + lang])
+                                sub_idx += 1
                         else:
-                            xbmc.log(msg='[{}] - Ignoring stream {}: No subtitle processing set'.format(__addon_id__, index), level=xbmc.LOGNOTICE)
+                            xbmc.log(msg='[{}] - Ignoring stream: no subtitle processing set'.format(__addon_id__), level=xbmc.LOGNOTICE)
 
                     # assume there's only one video stream
                     if type == 'video':
                         xbmc.log(msg='[{}] Found stream {} of type {} using codec {}'.format(__addon_id__, index, type, codec), level=xbmc.LOGNOTICE)
 
-                        if individual_streams:
-                            cmd_pre.extend(['-map', '0:' + str(index)])
-
                         video_wd = int(stream['width'])
                         video_ht = int(stream['height'])
                         video_fr = int(eval(stream['avg_frame_rate']))
 
-                        xbmc.log(msg='[{}] - Resolution: {} x {} @ {} fps'.format(__addon_id__, video_wd, video_ht, video_fr), level=xbmc.LOGNOTICE)
+                        xbmc.log(msg='[{}] - Processing video stream with resolution {} x {} @ {} fps'.format(__addon_id__, video_wd, video_ht, video_fr), level=xbmc.LOGNOTICE)
+
+                        if individual_streams:
+                            cmd_pre.extend(['-map', '0:' + str(index)])
 
                         if codec != 'h264' or deinterlace_video:
                             cmd_video = ['-c:v', 'libx264']
@@ -793,16 +781,16 @@ def convert(rec, dest, delsource='False'):
                         if force_sd and video_wd > 720:
                             cmd_video.extend(['-vf', 'scale=720:576'])
 
-        # alternatively insert canvas_size here, after we learned actual video size
-        #if cmd_sub:
-        #    cmd_pre[3:3] = ['-canvas_size', str(video_wd - 16) + 'x' + str(video_ht)]
+        # insert canvas_size for subtitle before inputfile only if cmd_sub is not [] (meaning subtitles
+        # is True and at least one matching subtitle was found), and after we learned actual video size
+        if cmd_sub:
+            # 704x576 for ubtitles should match any case
+            #cmd_pre[3:3] = ['-canvas_size', '704x576']
+            cmd_pre[3:3] = ['-canvas_size', str(video_wd - 16) + 'x' + str(video_ht)]
 
         cmd = cmd_pre + cmd_audio + cmd_video + cmd_sub
 
-        cmd_str = ''
-        for c in cmd:
-            cmd_str += c + ' '
-        cmd_str += lenc(outfilename)
+        cmd_str = ' '.join(c for c in cmd + [lenc(outfilename)])
 
         # use outfilename if directory is locally accessible
         if os.path.exists(denc(destdir)):
