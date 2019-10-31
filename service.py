@@ -30,6 +30,7 @@ __localize__ = __addon__.getLocalizedString
 __profile__ = __addon__.getAddonInfo('profile')
 
 time_fmt = '%Y-%m-%d %H:%M:%S'
+#output_fmt = '.mp4'
 
 genres = {
     '00': __localize__(30100),
@@ -148,7 +149,7 @@ def read_val(item, default):
 
 def load_addon_settings():
     global sleep_time, add_episode, add_channel, add_starttime, add_new, create_title, create_genre
-    global del_source, vdr_dir, vdr_port, temp_dir, dest_dir, group_shows, unknown_lang
+    global del_source, vdr_dir, vdr_port, temp_dir, dest_dir, group_shows, unknown_lang, output_fmt
     global individual_streams, recode_audio, deinterlace_video, force_sd, audio_filter_lang, sub_filter_lang
     global output_overwrite, notification_success, notification_fail, loc_encoding, dst_encoding, subtitles
 
@@ -178,6 +179,8 @@ def load_addon_settings():
     notification_success = read_val('successnote', True)
     notification_fail    = read_val('failurenote', True)
     use_win_encoding     = read_val('winencoding', False)
+
+    output_fmt           = '.' + read_val('outfmt', 'mp4')
 
     unknown_lang         = 'unknown'
     audio_filter_lang    = read_set('filter', 'deu, eng')
@@ -629,7 +632,7 @@ def convert(rec, dest, delsource='False'):
 
         recname = rec['recording']['title'] + suffix
 
-        outfilename = os.path.join(destdir, recname + '.mp4')
+        outfilename = os.path.join(destdir, recname + output_fmt)
 
         if xbmcvfs.exists(denc(outfilename)):
             if output_overwrite:
@@ -639,7 +642,7 @@ def convert(rec, dest, delsource='False'):
                 xbmc.log(msg='[{}] Output file \'{}\' already exists. Abort.'.format(__addon_id__, lenc(os.path.basename(outfilename))), level=xbmc.LOGNOTICE)
                 return
 
-        tempfilename = os.path.join(temp_dir, recname + '.mp4')
+        tempfilename = os.path.join(temp_dir, recname + output_fmt)
 
         if os.path.exists(lenc(tempfilename)):
             os.remove(lenc(tempfilename))

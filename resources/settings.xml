@@ -2,7 +2,6 @@
 <settings>
     <category label="30000">
         <setting label="30001" type="folder" id="recdir" default="/home/kodi/Aufnahmen" />
-        <setting label="30002" type="folder" id="scandir" default="/home/kodi/tmp" />
         <setting label="30003" type="folder" id="destdir" default="/home/kodi/Videos" />
         <setting type="sep"/>
         <setting label="30004" type="bool" id="delsource" default="false" />
@@ -36,5 +35,6 @@
         <setting label="30025" type="bool" id="deinterlace" default="true" />
         <setting label="30029" type="bool" id="forcesd" default="false" />
         <setting label="30030" type="bool" id="subtitles" default="false" />
+        <setting label="30031" type="labelenum" id="outfmt" values="mp4|mkv|wtv|mov" default="mp4" />
     </category>
 </settings>

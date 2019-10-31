@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="service.vdr.archive" name="VDR Recordings Archive Service" version="3.0" provider-name="Paulemann">
+<addon id="service.vdr.archive" name="VDR Recordings Archive Service" version="3.1" provider-name="Paulemann">
     <requires>
         <import addon="xbmc.python" version="2.24.0"/>
         <import addon="xbmc.json" version="6.32.4"/>
@@ -11,10 +11,10 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <platform>linux</platform>
-        <summary lang="en">Archive VDR Recordings as mp4 video files.</summary>
-        <summary lang="de">Archivierung von VDR Aufnahmen als mp4-Videodateien.</summary>
-        <description lang="en">This addon lets you select locally stored VDR recordings to get archived as mp4 video files at the configured destination. The conversion is handled by a service which runs in the background. It requires python-dateutil and ffmpeg being installed on your system.</description>
-        <description lang="de">Mit Hilfe dieses Addons können lokal gespeicherte VDR Aufnahmen als mp4-Videodateien am konfigurierten Speicherort archiviert werden. Die Umwandlung erfolgt durch einen Dienst im Hintergrund. Die Installation von python-dateutil und ffmpeg ist erforderlich.</description>
+        <summary lang="en">Archive VDR recordings as video files in various formats.</summary>
+        <summary lang="de">Archivierung von VDR Aufnahmen in verschiedenen Videformaten.</summary>
+        <description lang="en">This addon lets you select locally stored VDR recordings for archiving in a selectable output format. The conversion runs as a background process. It requires python-dateutil and ffmpeg being installed on your system.</description>
+        <description lang="de">Mit Hilfe dieses Addons können lokal gespeicherte VDR Aufnahmen in einem wählbaren Ausgabeformat archiviert werden. Die Umwandlung erfolgt im Hintergrund. Die Installation von python-dateutil und ffmpeg ist erforderlich.</description>
         <disclaimer lang="en">Use at your own risk</disclaimer>
         <disclaimer lang="de">Benutzung auf eigene Gefahr</disclaimer>
     </extension>
