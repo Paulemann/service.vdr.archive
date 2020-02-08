@@ -114,6 +114,13 @@ class MultiChoiceDialog(pyxbmct.AddonDialogWindow):
 
 
 if __name__ == '__main__':
+    WIN = xbmcgui.Window(10000)
+
+    if WIN.getProperty(__addon_id__ + '.running') == 'True':
+        sys.exit(1)
+    else:
+        WIN.setProperty(__addon_id__ + '.running' , 'True')
+
     try:
         rec_sort = int(__setting__('recsort'))
     except:
@@ -169,3 +176,6 @@ if __name__ == '__main__':
                 continue
 
     del dialog
+
+    WIN.clearProperty(__addon_id__ + '.running')
+    sys.exit(0)
