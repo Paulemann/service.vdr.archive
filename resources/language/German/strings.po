@@ -157,6 +157,10 @@ msgctxt "#30042"
 msgid "Configuration error. Check log file for details"
 msgstr "Konfigurationsfehler. Log-Datei enthält Details"
 
+msgctxt "#30043"
+msgid "Archiving started"
+msgstr "Archivierung begonnen"
+
 msgctxt "#30050"
 msgid "Select recordings to archive"
 msgstr "Aufnahmen zur Archivierung auswählen"

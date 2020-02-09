@@ -153,6 +153,15 @@ def load_addon_settings():
     global individual_streams, recode_audio, deinterlace_video, force_sd, audio_filter_lang, sub_filter_lang
     global output_overwrite, notify_on_success, notify_on_failure, loc_encoding, dst_encoding, subtitles
 
+    #loc_encoding         = locale.getpreferredencoding()
+    loc_encoding         = sys.getfilesystemencoding()
+    xbmc.log(msg='[{}] Local encoding: {}'.format(__addon_id__, loc_encoding), level=xbmc.LOGDEBUG)
+
+    use_win_encoding     = read_val('winencoding', False)
+
+    dst_encoding         = 'cp1252' if use_win_encoding else loc_encoding
+    xbmc.log(msg='[{}] Destination encoding: {}'.format(__addon_id__, dst_encoding), level=xbmc.LOGDEBUG)
+
     sleep_time           = read_val('sleep', 300)
     vdr_port             = read_val('pvrport', 34890)
 
@@ -165,10 +174,9 @@ def load_addon_settings():
     create_genre         = read_val('creategenre', False)
     group_shows          = read_val('groupshows', False)
 
-    vdr_dir              = xbmc.translatePath(read_val('recdir', '/home/kodi/Aufnahmen'))
-    dest_dir             = xbmc.translatePath(read_val('destdir', '/home/kodi/Videos'))
-    #temp_dir             = read_val('scandir', '/home/kodi/tmp')
-    temp_dir             = xbmc.translatePath(__profile__)
+    vdr_dir              = xbmc.translatePath(read_val('recdir', '/home/kodi/Aufnahmen')).decode(loc_encoding)
+    dest_dir             = xbmc.translatePath(read_val('destdir', '/home/kodi/Videos')).decode(dst_encoding)
+    temp_dir             = xbmc.translatePath(__profile__).decode(loc_encoding)
 
     individual_streams   = read_val('allstreams', True)
     force_sd             = read_val('forcesd', False)
@@ -178,7 +186,6 @@ def load_addon_settings():
     output_overwrite     = read_val('overwrite', True)
     notify_on_success    = read_val('successnote', True)
     notify_on_failure    = read_val('failurenote', True)
-    use_win_encoding     = read_val('winencoding', False)
 
     output_fmt           = '.' + read_val('outfmt', 'mp4')
 
@@ -186,13 +193,6 @@ def load_addon_settings():
     audio_filter_lang    = read_set('filter', 'deu, eng')
     sub_filter_lang      = audio_filter_lang
     audio_filter_lang.add(unknown_lang)
-
-    #loc_encoding = locale.getpreferredencoding()
-    loc_encoding = sys.getfilesystemencoding()
-    xbmc.log(msg='[{}] Local encoding: {}'.format(__addon_id__, loc_encoding), level=xbmc.LOGDEBUG)
-
-    dst_encoding = 'cp1252' if use_win_encoding else loc_encoding
-    xbmc.log(msg='[{}] Destination encoding: {}'.format(__addon_id__, dst_encoding), level=xbmc.LOGDEBUG)
 
     if __name__ == '__main__':
         xbmc.log(msg='[{}] Settings loaded.'.format(__addon_id__), level=xbmc.LOGNOTICE)
@@ -472,7 +472,7 @@ def get_recs(topdir, expand=False, sort=None):
             if not files:
                 continue
             if 'info' in files and '00001.ts' in files:
-                r = {'path':path.decode(loc_encoding), 'recording':get_vdr_recinfo(path, extended=expand)}
+                r = {'path':path, 'recording':get_vdr_recinfo(path, extended=expand)}
                 recs.append(r)
 
     if expand:
@@ -656,6 +656,12 @@ def build_cmd(data, input):
                 if force_sd and video_wd > 720:
                     cmd_video.extend(['-vf', 'scale=720:576'])
 
+                #if col_to_grey:
+                #    if '-vf' in cmd_video:
+                #        cmd_video[cmd_video.index('-vf') + 1] += ',hue=s=0'
+                #    else:
+                #        cmd_video.extend('-vf', 'hue=s=0')
+
         xbmc.log(msg='[{}] Finished analyizing input file. Proceeding ...'.format(__addon_id__), level=xbmc.LOGDEBUG)
     else:
         xbmc.log(msg='[{}] No data. Proceeding with defaults ...'.format(__addon_id__), level=xbmc.LOGDEBUG)
@@ -715,6 +721,8 @@ def infile_list(rec):
 
 
 def analyze(videofile):
+    xbmc.log(msg='[{}] Analyzing input file ...'.format(__addon_id__), level=xbmc.LOGNOTICE)
+
     try:
         data = subprocess.check_output(['ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', videofile,])
         output = json.loads(data.decode(loc_encoding))
@@ -725,9 +733,7 @@ def analyze(videofile):
     return output
 
 
-def mk_outdir(rec, dest):
-    outdir = dest.decode(dst_encoding)
-
+def mk_outdir(rec, outdir):
     main_genre = genres['F0' if group_shows and rec['recording']['episode'] > 0 else (rec['recording']['genre'][0][:-1]  + '0')]
     genre = genres[rec['recording']['genre'][0]]
 
@@ -772,6 +778,8 @@ def build_outname(rec):
 
 
 def convert(rec, dest, delsource='False'):
+    outfilename = outname = ''
+
     if not lock.acquire(False):
         xbmc.log(msg='[{}] Function \'convert\' exited (locked).'.format(__addon_id__), level=xbmc.LOGDEBUG)
         return
@@ -808,25 +816,18 @@ def convert(rec, dest, delsource='False'):
             xbmc.log(msg='[{}] No matching input file(s) found in source directory. Abort.'.format(__addon_id__), level=xbmc.LOGNOTICE)
             return
 
-        xbmc.log(msg='[{}] Analyzing input file ...'.format(__addon_id__), level=xbmc.LOGNOTICE)
+        if notify_on_success or notify_on_failure:
+            xbmc.executebuiltin('Notification({},{})'.format(__localize__(30043), outname.encode(loc_encoding)))
 
         output = analyze(probefilename)
 
         cmd = build_cmd(output, infilename)
-        #xbmc.log(msg='[{}] cmd: {}, output filename: {}. Proceeding ...'.format(__addon_id__, cmd, outfilename.encode(loc_encoding)), level=xbmc.LOGDEBUG)
-
-        #cmd_str = ' '.join(c for c in cmd + [outfilename])
-        #xbmc.log(msg='[{}] Calling \'{}\''.format(__addon_id__, cmd_str.encode(loc_encoding)), level=xbmc.LOGDEBUG)
 
         # use outfilename if directory is locally accessible
-        #if os.path.exists(outdir.encode(dst_encoding)):
-        #    cmd.append(outfilename.encode(dst_encoding))
-        # else use local temporary file for output
-        #else:
-        #    cmd.append(tempfilename.encode(loc_encoding))
-        # Test:
+        #if os.path.exists(outdir) and loc_encoding == dst_encoding:
         if os.path.exists(outdir):
             cmd.append(outfilename)
+        # else use local temporary file for output
         else:
             cmd.append(tempfilename)
 
