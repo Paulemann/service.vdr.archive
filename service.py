@@ -279,7 +279,7 @@ def utc_to_local(t_str, t_fmt):
 
 def friendly(text):
     # replace ':' with ' -', '?' with '', and '"' with '\'' to make output windows-friendly
-    return text.replace(':', ' -').replace('?', '').replace('"', '\'').replace('*', '').replace('<', '-').replace('>', '-')
+    return text.replace(':', ' -').replace('?', '').replace('"', '\'').replace('*', '').replace('<', '-').replace('>', '-').replace('/', '-')
 
 
 def get_vdr_recinfo(recdir, extended=False):
@@ -303,9 +303,11 @@ def get_vdr_recinfo(recdir, extended=False):
         with codecs.open(infofile, 'r', encoding=loc_encoding) as f:
             for line in f.readlines():
                 if line[:2] == 'T ':
-                    title = friendly(line[2:].rstrip('\n'))
+                    #title = friendly(line[2:].rstrip('\n'))
+                    title = line[2:].rstrip('\n')
                 if line[:2] == 'S ':
-                    short = friendly(line[2:].rstrip('\n'))
+                    #short = friendly(line[2:].rstrip('\n'))
+                    short = line[2:].rstrip('\n')
                     str_short = ' ' + short
                 if line[:2] == 'C ':
                     channel =  line[2:].split(' ', 1)[1].rstrip('\n')
@@ -755,9 +757,12 @@ def mk_outdir(rec, outdir):
             xbmcvfs.mkdirs(outdir.encode(dst_encoding))
     except:
         xbmc.log(msg='[{}] Error creating destination directory \'{}\'.'.format(__addon_id__, outdir.encode(loc_encoding)), level=xbmc.LOGERROR)
-        return None
+        #return None
 
-    return outdir
+    if not xbmcvfs.exists(outdir.encode(dst_encoding)):
+        return None
+    else:
+        return outdir
 
 
 def build_outname(rec):
@@ -766,13 +771,15 @@ def build_outname(rec):
     if add_episode and rec['recording']['episode'] > 0:
         suffix = suffix + ' ' + format(rec['recording']['season']) + 'x' + format(rec['recording']['episode'], '02d')
     if rec['recording']['short']:
-        suffix = suffix + ' - ' + rec['recording']['short']
+        #suffix = suffix + ' - ' + rec['recording']['short']
+        suffix = suffix + ' - ' + friendly(rec['recording']['short'])
     if add_channel and rec['recording']['channel']:
         suffix = suffix + '_' + rec['recording']['channel']
     if add_starttime and rec['recording']['start']:
         suffix = suffix + '_' + rec['recording']['start']
 
-    outname = rec['recording']['title'] + suffix
+    #outname = rec['recording']['title'] + suffix
+    outname = friendly(rec['recording']['title']) + suffix
 
     return outname
 
@@ -817,7 +824,8 @@ def convert(rec, dest, delsource='False'):
             return
 
         if notify_on_success or notify_on_failure:
-            xbmc.executebuiltin('Notification({},{})'.format(__localize__(30043), outname.encode(loc_encoding)))
+            #xbmc.executebuiltin('Notification({},{})'.format(__localize__(30043), outname.encode(loc_encoding)))
+            xbmc.executebuiltin('Notification({},{})'.format(__localize__(30043), rec['recording']['title'].encode(loc_encoding)))
 
         output = analyze(probefilename)
 
@@ -884,14 +892,16 @@ def convert(rec, dest, delsource='False'):
         if outfilename and xbmcvfs.exists(outfilename.encode(dst_encoding)) and not sys.exc_info()[1]:
             xbmc.log(msg='[{}] Archiving completed.'.format(__addon_id__), level=xbmc.LOGNOTICE)
             if notify_on_success:
-                xbmc.executebuiltin('Notification({},{})'.format(__localize__(30040), outname.encode(loc_encoding)))
+                #xbmc.executebuiltin('Notification({},{})'.format(__localize__(30040), outname.encode(loc_encoding)))
+                xbmc.executebuiltin('Notification({},{})'.format(__localize__(30040), rec['recording']['title'].encode(loc_encoding)))
         else:
             if sys.exc_info()[1]:
                 xbmc.log(msg='[{}] Archiving failed with error {}'.format(__addon_id__, sys.exc_info()[1]), level=xbmc.LOGERROR)
             else:
                 xbmc.log(msg='[{}] Archiving failed.'.format(__addon_id__), level=xbmc.LOGERROR)
             if notify_on_failure:
-                xbmc.executebuiltin('Notification({},{})'.format(__localize__(30041), outname.encode(loc_encoding)))
+                #xbmc.executebuiltin('Notification({},{})'.format(__localize__(30041), outname.encode(loc_encoding)))
+                xbmc.executebuiltin('Notification({},{})'.format(__localize__(30041), rec['recording']['title'].encode(loc_encoding)))
             if xbmcvfs.exists(outfilename.encode(dst_encoding)):
                 xbmcvfs.delete(outfilename.encode(dst_encoding))
                 if (create_title or group_shows) and not xbmcvfs.listdir(outdir.encode(dst_encoding)):
